@@ -1,4 +1,4 @@
-package com.teriyake;
+package com.teriyake.vai;
 
 import static org.junit.Assert.assertTrue;
 
