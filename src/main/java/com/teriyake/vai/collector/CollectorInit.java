@@ -29,6 +29,13 @@ public class CollectorInit {
         return num;
     }
 
+    public static String setPlayerToRet(Scanner input) {
+        System.out.print("Player to retrieve from, last-Default: ");
+        String user = "";
+        user = input.nextLine();      
+        return user;
+    }
+
     public static int setTimeLimit() {
         Scanner input = new Scanner(System.in);
         System.out.print("Set time limit, 60sec-Default: ");
