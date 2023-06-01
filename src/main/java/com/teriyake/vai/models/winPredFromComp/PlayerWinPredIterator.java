@@ -14,12 +14,11 @@ import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 
 import com.teriyake.stava.parser.PlayerParser;
-import com.teriyake.stava.stats.Player;
 import com.teriyake.stava.stats.player.PlayerMode;
 
 public class PlayerWinPredIterator implements DataSetIterator{
     private BufferedReader csvReader;
-    private static String localPath = "vai/src/main/java/com/teriyake/vai/winPredFromComp";
+    private static String localPath = "vai/src/main/java/com/teriyake/vai/models/winPredFromComp";
     private int csvCursor;
     private int csvLength;
     private int batch;
@@ -64,7 +63,7 @@ public class PlayerWinPredIterator implements DataSetIterator{
     }
     @Override
     public DataSet next(int num){
-        double[][] featureList = new double[num][8]; // player stats
+        double[][] featureList = new double[num][9]; // player stats
         double[][] labelList = new double[num][1]; // winrates
         for(int i = 0; i < num; i++) {
             String line = csv.get(csvCursor);
@@ -75,32 +74,32 @@ public class PlayerWinPredIterator implements DataSetIterator{
             String json = fileReader(jsonPath);
             PlayerMode player = PlayerParser.parsedJsonToPlayer(json).getMode("competitive");
             labelList[i][0] = player.getMatchesWinPct() / 100;
-            featureList[i][0] = player.getKAST() / 100;
-            featureList[i][1] = player.getScorePerRound() / 1000;
-            featureList[i][2] = player.getDamagePerRound() / 1000;
-            featureList[i][3] = player.getKADRatio() / 2;
+            featureList[i][0] = player.getKAST();// / 100;
+            featureList[i][1] = player.getScorePerRound();// / 1000;
+            featureList[i][2] = player.getDamagePerRound();// / 1000;
+            featureList[i][3] = player.getKADRatio();// / 2;
             featureList[i][4] = player.getRoundsWinPct() / 100;
-            featureList[i][5] = player.getKillsPerRound() / 2;
+            featureList[i][5] = player.getKillsPerRound();// / 2;
             featureList[i][6] = player.getHeadshotsPercentage() / 100;
-            featureList[i][7] = player.getEconRatingPerMatch() / 100;
-            // featureList[i][8] = player.getEconRatingPerMatch() / 100;
+            featureList[i][7] = player.getEconRatingPerMatch();// / 100;
+            featureList[i][8] = player.getRoundsDuration();
         }
 
-        // System.out.println("\nfeatures");
-        // System.out.println();
-        // for(double[] i : featureList) {
-        //     for(int j = 0; j < i.length; j++) {
-        //         System.out.print(toFeature[j + 5] + ": " + i[j] + " ");
-        //         // System.out.print(i[j] + ", ");
-        //     }
-        // }
-        // // System.out.println("\nlabel");
-        // for(double[] i : labelList) {
-        //     for(double j : i) {
-        //         System.out.print("winrate: " + j);
-        //     }
-        // }
-        // System.out.println();
+        for(int c = 0; c < featureList[0].length; c++) {
+            double max = Integer.MIN_VALUE;
+            double min = Integer.MAX_VALUE;
+            if(c == 4 || c == 6)
+                continue;
+            for(int r = 0; r < featureList.length; r++) {
+                if(max < featureList[r][c])
+                   max = featureList[r][c];
+                else if(min > featureList[r][c])
+                    min = featureList[r][c];
+            }
+            for(int r = 0; r < featureList.length; r++) {
+                featureList[r][c] = (featureList[r][c] - min) / (max - min);
+            }         
+        }
 
         INDArray features = Nd4j.create(featureList);
         INDArray labels = Nd4j.create(labelList);
