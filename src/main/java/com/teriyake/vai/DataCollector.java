@@ -1,16 +1,12 @@
 package com.teriyake.vai;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 import com.teriyake.stava.HttpStatusException;
 import com.teriyake.stava.Retriever;
 import com.teriyake.stava.Store;
-import com.teriyake.stava.connection.ConnectPage;
 import com.teriyake.vai.collector.Collector;
 import com.teriyake.vai.collector.CollectorInit;
 
@@ -20,12 +16,13 @@ public class DataCollector {
     public static void main(String[] args) throws HttpStatusException {
         Scanner input = new Scanner(System.in);
         int numToRet = CollectorInit.setNumToRet(input);
+        String start = CollectorInit.setPlayerToRet(input);
+
         System.out.println("Loading...");
-        ConnectPage connection = new ConnectPage();
         Retriever retriever = new Retriever();
         // File file = CollectorInit.initFile(input);
         String path = System.getProperty("user.home") + "/OneDrive/Documents/";
-        File list = new File(path, "/Vai/HasRet.txt");
+        File list = new File(path, "Vai/");
         File file = new File(path);
 
         Store store = new Store(file);
@@ -37,7 +34,7 @@ public class DataCollector {
 
         input.close();
 
-        Collector collector = new Collector(retriever, numToRet, list);
+        Collector collector = new Collector(retriever, numToRet, list, start);
         try {
             collector.collect();
         } catch (IOException e) {
