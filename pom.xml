@@ -30,7 +30,7 @@
       <artifactId>StaVa</artifactId>
       <version>0.1.0-beta</version>
       <scope>system</scope>
-      <systemPath>C:\Users\Ian\OneDrive\Projects\Coding Projects\Java Projects\StaVa\compiled\StaVa-0.1.0-beta-with-dependencies.jar</systemPath>
+      <systemPath>C:\Users\teriy\OneDrive\Projects\Coding Projects\Java Projects\StaVa\compiled\StaVa-0.1.0-beta-with-dependencies.jar</systemPath>
       <!-- <systemPath>C:\Users\Ian\OneDrive\Projects\Coding Projects\Java Projects\StaVa\compiled\StaVa-0.1.0-beta-with-dependencies.jar</systemPath> -->
     </dependency>
     <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
