@@ -14,7 +14,6 @@ public class VaiUtil {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
             String line;
-             // Holds true until there is nothing to read
             while((line = reader.readLine()) != null)
                 output.add(line);
             reader.close();
@@ -42,7 +41,6 @@ public class VaiUtil {
         try(BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             StringBuilder sb = new StringBuilder("");
             String line;
-             // Holds true until there is nothing to read
             while((line = reader.readLine()) != null) {
                 sb.append(line);
             }
