@@ -18,7 +18,7 @@ import com.teriyake.stava.stats.player.PlayerMode;
 
 public class PlayerWinPredIterator implements DataSetIterator{
     private BufferedReader csvReader;
-    private static String localPath = "vai/src/main/java/com/teriyake/vai/models/winPredFromComp";
+    private static String localPath = System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/models/winPredFromComp";
     private int csvCursor;
     private int csvLength;
     private int batch;
@@ -98,7 +98,8 @@ public class PlayerWinPredIterator implements DataSetIterator{
             }
             for(int r = 0; r < featureList.length; r++) {
                 featureList[r][c] = (featureList[r][c] - min) / (max - min);
-            }         
+            }
+            // System.out.println(min + ":" + max);
         }
 
         INDArray features = Nd4j.create(featureList);
