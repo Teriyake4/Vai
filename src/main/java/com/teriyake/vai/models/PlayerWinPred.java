@@ -1,5 +1,7 @@
 package com.teriyake.vai.models;
 
+import java.io.File;
+
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
@@ -102,10 +104,10 @@ public class PlayerWinPred {
         System.out.println(eval.stats());
         // System.out.println(trainingData);
 
-        // log.info("Saving model...");
-        // File location = new File(System.getProperty("user.home") + "/OneDrive/Documents/Vai/models/PlayerWinPred-Test.zip");
-        // ModelSerializer.writeModel(model, location, true);
-        // model.save(location);
+        log.info("Saving model...");
+        File location = new File(System.getProperty("user.home") + "/OneDrive/Documents/Vai/models/PlayerWinPred-Test/PlayerWinPred-Test.zip");
+        ModelSerializer.writeModel(model, location, true);
+        model.save(location);
     }
 
 
