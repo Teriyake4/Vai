@@ -36,7 +36,6 @@ public class PlayerWinPredIterator implements DataSetIterator{
     private String[] toFeature;
     private String[] featureByMatch;
     private ArrayList<String> csv = new ArrayList<String>();
-    // private String[] toExclude;
 
     public PlayerWinPredIterator(int batch, int csvStart) throws IOException {
         csvReader = new BufferedReader(new FileReader(csvPath));
