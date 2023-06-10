@@ -113,6 +113,9 @@ public class PlayerWinPredIterator implements DataSetIterator{
                 max = 140;
                 min = 0;
             }
+            else if(c == 3 || c == 7) {
+                min = 0;
+            }
             for(int r = 0; r < featureList.length; r++) {
                 featureList[r][c] = (featureList[r][c] - min) / (max - min);
             }
