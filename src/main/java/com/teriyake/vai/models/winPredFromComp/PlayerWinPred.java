@@ -34,8 +34,8 @@ public class PlayerWinPred {
         // Sgd: lr = 0.11, hid = 12 | 5.29028e-01
         // AdaGrad: lr = 0.05, hid = 12 | 5.89893e-01
 
-        int batchSize = 469; // 225 seed: 123
-        int seed = 100; // 123
+        int batchSize = 476; // 225 seed: 123
+        int seed = 333; // 123 // 333
         double learningRate = 0.001;
         int numInputs = 9;
         int numOutputs = 1;
@@ -47,7 +47,7 @@ public class PlayerWinPred {
         DataSet data = iterator.next();
         data.shuffle(seed);
 
-        SplitTestAndTrain testAndTrain = data.splitTestAndTrain(0.7867); // 0.65
+        SplitTestAndTrain testAndTrain = data.splitTestAndTrain(0.79); // 0.65
         DataSet trainingData = testAndTrain.getTrain();
         DataSet testData = testAndTrain.getTest();
         
@@ -96,7 +96,7 @@ public class PlayerWinPred {
             // System.out.println(output.getDouble(i)); // Predicted
             // System.out.println(testData.getLabels().getDouble(i)); // Actual
         }
-        System.out.println(output.rows());
+        System.out.println("Seed: " + seed);
         System.out.println(eval.stats());
         // System.out.println(trainingData);
 

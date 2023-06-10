@@ -89,7 +89,7 @@ public class PlayerWinPredIterator implements DataSetIterator{
         for(int c = 0; c < featureList[0].length; c++) {
             double max = Integer.MIN_VALUE;
             double min = Integer.MAX_VALUE;
-            if(c == 4 || c == 6 || c == 0)
+            if(c == 0 || c == 4 || c == 6)
                 continue;
             for(int r = 0; r < featureList.length; r++) {
                 if(max < featureList[r][c])
@@ -116,7 +116,7 @@ public class PlayerWinPredIterator implements DataSetIterator{
             for(int r = 0; r < featureList.length; r++) {
                 featureList[r][c] = (featureList[r][c] - min) / (max - min);
             }
-            // System.out.println(min + ":" + max);
+            System.out.println(min + ":" + max);
         }
 
         INDArray features = Nd4j.create(featureList);
