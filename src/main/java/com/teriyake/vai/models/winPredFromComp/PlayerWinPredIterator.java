@@ -18,7 +18,7 @@ import com.teriyake.stava.stats.player.PlayerMode;
 
 public class PlayerWinPredIterator implements DataSetIterator{
     private BufferedReader csvReader;
-    private static String localPath = System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/models/winPredFromComp";
+    private static File csvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVPlayerIndex.csv");
     private int csvCursor;
     private int csvLength;
     private int batch;
@@ -39,12 +39,9 @@ public class PlayerWinPredIterator implements DataSetIterator{
     // private String[] toExclude;
 
     public PlayerWinPredIterator(int batch, int csvStart) throws IOException {
-        File csvPath = new File(localPath, "CSVPlayerIndex.csv");
         csvReader = new BufferedReader(new FileReader(csvPath));
-
         this.batch = batch;
         csvCursor = csvStart;
-
         // 96 features
         String[] labels = {"matchWinPct"}; // roundsWinPct, attackRoundsWinPct, defenseRoundsWinPct
         String[] features = {"rank", "peakRank", "matchesPlayed", "matchesDuration", "roundsDuration", "scorePerMatch", "scorePerRound", "killsPerRound", "killsPerMatch", "deathsPerRound", "deathsPerMatch", "assistsPerRound", "assistsPerMatch", "kDRatio", "kDARatio", "kADRatio", "damageDeltaPerRound", "damagePerRound", "damagePerMatch", "damagePerMinute", "headshotsPerRound", "headshotsPercentage", "grenadeCastsPerRound", "grenadeCastsPerMatch", "ability1CastsPerRound", "ability1CastsPerMatch", "ability2CastsPerRound", "ability2CastsPerMatch", "ultimateCastsPerRound", "ultimateCastsPerMatch", "econRatingPerMatch", "econRatingPerRound", "firstBloodsPerMatch", "kAST", "mostKillsInMatch", "plantsPerMatch", "plantsPerRound", "attackKDRatio", "attackKAST", "defusesPerMatch", "defusesPerRound", "defenseKDRatio", "defenseKAST"};
@@ -70,31 +67,51 @@ public class PlayerWinPredIterator implements DataSetIterator{
             csvCursor++;
             int csvIndex = line.indexOf(",");
             String dataPath = line.substring(csvIndex + 1);
+            if(System.getProperty("user.home").contains("teriy")) {
+                int userIndex = dataPath.indexOf("Ian");
+                dataPath = dataPath.substring(0, userIndex) + "teriy" + dataPath.substring(userIndex + 3);
+            }
             File jsonPath = new File(dataPath);
             String json = fileReader(jsonPath);
             PlayerMode player = PlayerParser.parsedJsonToPlayer(json).getMode("competitive");
             labelList[i][0] = player.getMatchesWinPct() / 100;
-            featureList[i][0] = player.getKAST();// / 100;
-            featureList[i][1] = player.getScorePerRound();// / 1000;
-            featureList[i][2] = player.getDamagePerRound();// / 1000;
+            featureList[i][0] = player.getKAST() / 100;
+            featureList[i][1] = player.getScorePerRound();// / 1000; MAX: 1500
+            featureList[i][2] = player.getDamagePerRound();// / 1000; MAX: 750
             featureList[i][3] = player.getKADRatio();// / 2;
             featureList[i][4] = player.getRoundsWinPct() / 100;
-            featureList[i][5] = player.getKillsPerRound();// / 2;
+            featureList[i][5] = player.getKillsPerRound();// / 2; MAX: 6, maybe 7?
             featureList[i][6] = player.getHeadshotsPercentage() / 100;
             featureList[i][7] = player.getEconRatingPerMatch();// / 100;
-            featureList[i][8] = player.getRoundsDuration();
+            featureList[i][8] = player.getRoundsDuration(); // MAX: 140 sec
         }
 
         for(int c = 0; c < featureList[0].length; c++) {
             double max = Integer.MIN_VALUE;
             double min = Integer.MAX_VALUE;
-            if(c == 4 || c == 6)
+            if(c == 4 || c == 6 || c == 0)
                 continue;
             for(int r = 0; r < featureList.length; r++) {
                 if(max < featureList[r][c])
                    max = featureList[r][c];
                 else if(min > featureList[r][c])
                     min = featureList[r][c];
+            }
+            if(c == 1) {
+                max = 1500;
+                min = 0;
+            }
+            else if(c == 2) {
+                max = 750;
+                min = 0;
+            }
+            // else if(c == 5) { // produces worse results?
+            //     max = 6;
+            //     min = 0;
+            // }
+            else if(c == 8) {
+                max = 140;
+                min = 0;
             }
             for(int r = 0; r < featureList.length; r++) {
                 featureList[r][c] = (featureList[r][c] - min) / (max - min);
@@ -137,11 +154,9 @@ public class PlayerWinPredIterator implements DataSetIterator{
     
     @Override
     public void reset() {        
-        File csvPath = new File(localPath, "CSVPlayerIndex.csv");
         try {            
-            if (csvReader != null) {
+            if (csvReader != null)
                 csvReader.close();
-            }
             csvReader = new BufferedReader(new FileReader(csvPath));
         }
         catch(Exception e) {

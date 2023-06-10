@@ -1,4 +1,4 @@
-package com.teriyake.vai.models;
+package com.teriyake.vai.models.winPredFromComp;
 
 import java.io.File;
 
@@ -24,8 +24,6 @@ import org.nd4j.linalg.learning.config.Sgd;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.teriyake.vai.models.winPredFromComp.PlayerWinPredIterator;
 
 public class PlayerWinPred {
 
@@ -93,21 +91,19 @@ public class PlayerWinPred {
         eval.eval(testData.getLabels(), output);
         
         System.out.println("Prediction - Actual");
-        int count = 0;
         for(int i = 0; i < output.rows(); i++) {
-            System.out.println(output.getDouble(i) + " - " + testData.getLabels().getDouble(i));
+            // System.out.println(output.getDouble(i) + " - " + testData.getLabels().getDouble(i));
             // System.out.println(output.getDouble(i)); // Predicted
             // System.out.println(testData.getLabels().getDouble(i)); // Actual
-            count++;
         }
-        System.out.println(count);
+        System.out.println(output.rows());
         System.out.println(eval.stats());
         // System.out.println(trainingData);
 
-        log.info("Saving model...");
-        File location = new File(System.getProperty("user.home") + "/OneDrive/Documents/Vai/models/PlayerWinPred-Test/PlayerWinPred-Test.zip");
-        ModelSerializer.writeModel(model, location, true);
-        model.save(location);
+        // log.info("Saving model...");
+        // File location = new File(System.getProperty("user.home") + "/OneDrive/Documents/Vai/models/PlayerWinPred-Test/PlayerWinPred-Test.zip");
+        // ModelSerializer.writeModel(model, location, true);
+        // model.save(location);
     }
 
 

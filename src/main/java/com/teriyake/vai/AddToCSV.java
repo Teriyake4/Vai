@@ -7,9 +7,10 @@ import com.teriyake.stava.parser.PlayerParser;
 import com.teriyake.stava.stats.Player;
 import com.teriyake.vai.collector.AddDataSet;
 
+// ONLY RUN WITH ONE DEVICE ie: ENVY
 public class AddToCSV {
     public static void main(String[] args) {
-        File csvPath = new File(System.getProperty("user.home") + "/OneDrive/Projects/Coding Projects/Java Projects/Vai/vai/src/main/java/com/teriyake/vai/models/winPredFromComp/CSVPlayerIndex.csv");
+        File csvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVPlayerIndex.csv");
         File dataPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/player");
         String[] subPaths = dataPath.list();
         int total = 0;
