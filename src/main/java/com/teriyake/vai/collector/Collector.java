@@ -29,13 +29,13 @@ public class Collector {
         store.setFileNameAsName();
         retriever.setStorage(store);
         System.out.println("Storing player data in: " + store.getFilePath());
-
         input.close();
 
-        CollectorClass collector = new CollectorClass(retriever, numToRet, list, start);
         try {
+            CollectorClass collector = new CollectorClass(retriever, numToRet, list, start);
             collector.collect();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
         retriever.closeConnection();
@@ -56,15 +56,18 @@ public class Collector {
     }
 
     public static int setNumToRet(Scanner input) {
-        System.out.print("Number of players to retrieve, 5-Default: ");
+        System.out.print("Number of matches to retrieve, 1-Default: ");
         String user = input.nextLine();        
-        int num = 5;
+        int num = 1;
         try {
             num = Integer.parseInt(user);
         }
         catch(NumberFormatException e) {
         }
-        System.out.println("Retrieving " + num + " players");
+        if(num == 1)
+            System.out.println("Retrieving " + num + " match");
+        else
+            System.out.println("Retrieving " + num + " match");
         return num;
     }
 

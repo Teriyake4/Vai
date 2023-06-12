@@ -18,28 +18,27 @@ public class CollectorClass {
     private File filePath; // filepath of list of players already retrieved
     // private File retPath;
     private ArrayList<String> toRet;
-    private String start;
     // private ArrayList<String> attempted;
 
-    public CollectorClass(Retriever retriever, int numRet, File path, String toStart) {
+    public CollectorClass(Retriever retriever, int numRet, File path, String start) throws FileNotFoundException, IOException {
         ret = retriever;
         numToRet = numRet;
         filePath = path;
-        // retPath = ret.getStorage().getFilePath();
         toRet = new ArrayList<String>();
-        // attempted = new ArrayList<String>();
-        start = toStart;
-    }
-
-    public void collect() throws FileNotFoundException, IOException {
-        if(start == "")
+        if(start.equals(""))
             initToRet();
         else
             toRet.add(start);
+
+    }
+
+    public void collect() throws FileNotFoundException, IOException {
+        int numRet = 0;
+        int cursor = 0;
         for(int i = 0; i < toRet.size(); i++) {
-            if(i >= toRet.size() - 1 && i < numToRet) {
-                System.out.println("Adding Players");
+            if(cursor + 1 >= toRet.size() && numRet < numToRet) {
                 addToRet();
+                numRet++;
             }
             timeBuffer();
             String player = toRet.get(i);
@@ -62,19 +61,16 @@ public class CollectorClass {
                 i--;
                 continue;
             }
-
             String name = data.info().getName();
-            System.out.println("[" + data.info().getDate() + "] Collected: " + name + " --- " + (i + 1) + "/" + numToRet);
+            System.out.println("[" + data.info().getDate() + "] Collected: " + name + " --- " + (i + 1));
         }
     }
 
     private void addToRet() throws FileNotFoundException, IOException {
         int initSize = toRet.size();
-        int i = 1;
-        while(initSize >= toRet.size()) {
+        for(int i = toRet.size(); i > 0; i--) {
             timeBuffer();
-            String[] toAdd = null;
-            toAdd = ret.getPlayersFromRecentMatch(toRet.get(initSize - i));
+            String[] toAdd = ret.getPlayersFromRecentMatch(toRet.get(initSize - i));
             if(toRet.size() == 1) {
                 toRet.remove(0);
                 if(toAdd.length == 0)
@@ -92,10 +88,9 @@ public class CollectorClass {
                     System.out.println("Added " + player + " to list");
                 }
             }
-            if(initSize == toRet.size() && i < toRet.size())
-                i++;
+            if(initSize > toRet.size())
+                return;
         }
-
     }
 
     // returns last player from already retrieved to file
@@ -107,7 +102,6 @@ public class CollectorClass {
                 break;
             System.out.println(output.get(i));
             toRet.add(output.get(i));
-            addToRet();
         }
     }
 
