@@ -1,4 +1,4 @@
-package com.teriyake.vai.models.winPredFromComp;
+package com.teriyake.vai.models.winPred;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,9 +15,9 @@ import org.nd4j.linalg.factory.Nd4j;
 
 import com.teriyake.stava.parser.PlayerParser;
 import com.teriyake.stava.stats.player.PlayerMode;
+import com.teriyake.vai.VaiUtil;
 
 public class PlayerWinPredIterator implements DataSetIterator{
-    private BufferedReader csvReader;
     private static File csvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVPlayerIndex.csv");
     private int csvCursor;
     private int csvLength;
@@ -37,10 +37,10 @@ public class PlayerWinPredIterator implements DataSetIterator{
     private String[] featureByMatch;
     private ArrayList<String> csv = new ArrayList<String>();
 
-    public PlayerWinPredIterator(int batch, int csvStart) throws IOException {
-        csvReader = new BufferedReader(new FileReader(csvPath));
+    public PlayerWinPredIterator(int batch) throws IOException {
+        BufferedReader csvReader = new BufferedReader(new FileReader(csvPath));
         this.batch = batch;
-        csvCursor = csvStart;
+        csvCursor = 0;
         // 96 features
         String[] labels = {"matchWinPct"}; // roundsWinPct, attackRoundsWinPct, defenseRoundsWinPct
         String[] features = {"rank", "peakRank", "matchesPlayed", "matchesDuration", "roundsDuration", "scorePerMatch", "scorePerRound", "killsPerRound", "killsPerMatch", "deathsPerRound", "deathsPerMatch", "assistsPerRound", "assistsPerMatch", "kDRatio", "kDARatio", "kADRatio", "damageDeltaPerRound", "damagePerRound", "damagePerMatch", "damagePerMinute", "headshotsPerRound", "headshotsPercentage", "grenadeCastsPerRound", "grenadeCastsPerMatch", "ability1CastsPerRound", "ability1CastsPerMatch", "ability2CastsPerRound", "ability2CastsPerMatch", "ultimateCastsPerRound", "ultimateCastsPerMatch", "econRatingPerMatch", "econRatingPerRound", "firstBloodsPerMatch", "kAST", "mostKillsInMatch", "plantsPerMatch", "plantsPerRound", "attackKDRatio", "attackKAST", "defusesPerMatch", "defusesPerRound", "defenseKDRatio", "defenseKAST"};
@@ -58,7 +58,7 @@ public class PlayerWinPredIterator implements DataSetIterator{
         }
     }
     @Override
-    public DataSet next(int num){
+    public DataSet next(int num) {
         double[][] featureList = new double[num][9]; // player stats
         double[][] labelList = new double[num][1]; // winrates
         for(int i = 0; i < num; i++) {
@@ -71,7 +71,7 @@ public class PlayerWinPredIterator implements DataSetIterator{
                 dataPath = dataPath.substring(0, userIndex) + "teriy" + dataPath.substring(userIndex + 3);
             }
             File jsonPath = new File(dataPath);
-            String json = fileReader(jsonPath);
+            String json = VaiUtil.readFile(jsonPath);
             PlayerMode player = PlayerParser.parsedJsonToPlayer(json).getMode("competitive");
             labelList[i][0] = player.getMatchesWinPct() / 100;
             featureList[i][0] = player.getKAST() / 100;
@@ -156,14 +156,7 @@ public class PlayerWinPredIterator implements DataSetIterator{
     
     @Override
     public void reset() {        
-        try {            
-            if (csvReader != null)
-                csvReader.close();
-            csvReader = new BufferedReader(new FileReader(csvPath));
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
+        csvCursor = 0;
     }
     
     @Override
@@ -198,30 +191,7 @@ public class PlayerWinPredIterator implements DataSetIterator{
         return csvCursor;
     }
 
-    private String fileReader(File filePath) {
-        String output = "";
-        try(BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            StringBuilder sb = new StringBuilder("");
-            String line;
-             // Holds true until there is nothing to read
-            while((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            output = sb.toString();
-            reader.close();
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-            return output;
-        }
-        return output;
-    }
-
     public void close() {
-        try {
-            csvReader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        return;
     }
 }

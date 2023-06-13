@@ -1,4 +1,4 @@
-package com.teriyake.vai.models.winPredFromComp;
+package com.teriyake.vai.models.winPred;
 
 import java.io.File;
 
@@ -43,7 +43,7 @@ public class PlayerWinPred {
         int numEpochs = 2400; // 2400
 
 
-        DataSetIterator iterator = new PlayerWinPredIterator(batchSize, 0);
+        DataSetIterator iterator = new PlayerWinPredIterator(batchSize);
         DataSet data = iterator.next();
         data.shuffle(seed);
 
