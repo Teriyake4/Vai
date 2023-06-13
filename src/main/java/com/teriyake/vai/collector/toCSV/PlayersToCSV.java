@@ -1,8 +1,6 @@
 package com.teriyake.vai.collector.toCSV;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
