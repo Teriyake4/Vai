@@ -67,7 +67,7 @@ public class Collector {
         if(num == 1)
             System.out.println("Retrieving " + num + " match");
         else
-            System.out.println("Retrieving " + num + " match");
+            System.out.println("Retrieving " + num + " matchs");
         return num;
     }
 

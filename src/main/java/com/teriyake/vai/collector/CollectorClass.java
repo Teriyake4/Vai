@@ -34,16 +34,17 @@ public class CollectorClass {
 
     public void collect() throws FileNotFoundException, IOException {
         int numRet = 0;
-        int cursor = 0;
+        boolean isPrivate = false;
         for(int i = 0; i < toRet.size(); i++) {
-            if(cursor + 1 >= toRet.size() && numRet < numToRet) {
+            // System.out.println("i: " + i + 1 + " toRet: " + toRet.size() + " numRet: " + numRet + " numToRet: " + numToRet);
+            if(i + 1 >= toRet.size() && numRet < numToRet) {
                 addToRet();
                 numRet++;
             }
-            timeBuffer();
+            timeBuffer(isPrivate);
+            isPrivate = false;
             String player = toRet.get(i);
             Player data = null;
-            boolean isPrivate = false;
             try {
                 data = ret.getPlayer(player);
             }
@@ -56,21 +57,31 @@ public class CollectorClass {
                     e.printStackTrace();
             }
             addToTxt(player, isPrivate);
-            if(data == null) {
-                toRet.remove(i);
-                i--;
+            if(data == null)
                 continue;
-            }
             String name = data.info().getName();
-            System.out.println("[" + data.info().getDate() + "] Collected: " + name + " --- " + (i + 1));
+            System.out.println("[" + data.info().getDate() + "] Collected: " + name + " --- Player: " + (i + 1) + " - Match: " + numRet);
         }
     }
 
     private void addToRet() throws FileNotFoundException, IOException {
         int initSize = toRet.size();
         for(int i = toRet.size(); i > 0; i--) {
-            timeBuffer();
-            String[] toAdd = ret.getPlayersFromRecentMatch(toRet.get(initSize - i));
+            timeBuffer(false);
+            String[] toAdd = null;
+            try {
+                toAdd = ret.getPlayersFromRecentMatch(toRet.get(initSize - i));
+            }
+            catch(HttpStatusException e) {
+                if(e.getStatusCode() == 451)
+                    continue;
+                else
+                    e.printStackTrace();
+            }
+            if(toAdd == null) {
+                System.out.println("Null toAdd");
+                continue;
+            }
             if(toRet.size() == 1) {
                 toRet.remove(0);
                 if(toAdd.length == 0)
@@ -88,7 +99,7 @@ public class CollectorClass {
                     System.out.println("Added " + player + " to list");
                 }
             }
-            if(initSize > toRet.size())
+            if(initSize < toRet.size())
                 return;
         }
     }
@@ -131,14 +142,18 @@ public class CollectorClass {
         return output.contains(player);
     }
 
-    private void timeBuffer() {
-        int smallTime = (int) (Math.random() * 118) + 3;
+    private void timeBuffer(boolean isPrivate) {
+        int smallTime = 5;
+        if(isPrivate)
+            smallTime = (int) (Math.random() * 5) + 1;
+        else
+            smallTime = (int) (Math.random() * 118) + 3;
         System.out.println("Waiting " + smallTime + " sec");
         smallTime *= 1000;
         try {
             Thread.sleep(smallTime);
-          } catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-          }
+        }
     }
 }
