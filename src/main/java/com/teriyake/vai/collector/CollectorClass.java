@@ -33,6 +33,7 @@ public class CollectorClass {
     }
 
     public void collect() throws FileNotFoundException, IOException {
+        int attempted = 0;
         int numRet = 0;
         boolean isPrivate = false;
         for(int i = 0; i < toRet.size(); i++) {
@@ -47,6 +48,7 @@ public class CollectorClass {
             Player data = null;
             try {
                 data = ret.getPlayer(player);
+                attempted++;
             }
             catch(HttpStatusException e) {
                 if(e.getStatusCode() == 451) {
@@ -60,7 +62,7 @@ public class CollectorClass {
             if(data == null)
                 continue;
             String name = data.info().getName();
-            System.out.println("[" + data.info().getDate() + "] Collected: " + name + " --- Player: " + (i + 1) + " - Match: " + numRet);
+            System.out.println("[" + data.info().getDate() + "] Collected: " + name + " --- Player: " + (attempted) + " - Match: " + numRet);
         }
     }
 
