@@ -15,38 +15,33 @@ public class PlayersToCSV {
         String[] subPaths = dataPath.list();
         int total = 0;
         int attempted = 0;
-        for(String i : subPaths) { // act folders
-            File subPath = new File(dataPath, "/" + i);
-            String[] playerPaths = subPath.list();
-            for(String j : playerPaths) { //player
+        for(String act : subPaths) { // act folders
+            File actPath = new File(dataPath, "/" + act);
+            String[] playerPaths = actPath.list();
+            for(String player : playerPaths) { //player
                 total++;
-                File playerPath = new File(subPath, "/" + j + "/" + "player.json");
+                File playerPath = new File(actPath, "/" + player + "/" + "player.json");
                 String json = VaiUtil.readFile(playerPath);
-                Player player = PlayerParser.parsedJsonToPlayer(json);
-                ArrayList<String> csv = VaiUtil.readCSVFile(csvPath);
-                if(!player.containsMode("competitive") || player.getMode("competitive").getMatchesPlayed() <= 3)
+                Player data = PlayerParser.parsedJsonToPlayer(json);
+                if(!data.containsMode("competitive") || data.getMode("competitive").getMatchesPlayed() <= 3)
                     continue;
-                boolean inCSV = true;
-                for(String contents : csv) {
-                    try {
-                        inCSV = contents.contains(playerPath.getCanonicalPath());
-                    }
-                    catch(IOException e) {
-                        e.printStackTrace();
-                    }
-                    if(inCSV)
+                boolean inCSV = false;
+                ArrayList<String> csv = VaiUtil.readCSVFile(csvPath);
+                for(String line : csv) {
+                    if(line.contains("\\" + player + "\\player.json")) {
+                        inCSV = true;
                         break;
+                    }
                 }
                 if(inCSV)
                     continue;
-                // System.out.println(inCSV);
                 try {
                     VaiUtil.addToCSVFile(csvPath, csv.size() + "," + playerPath.getCanonicalPath());
                 }
                 catch(IOException e) {
                     e.printStackTrace();
                 }
-                System.out.println("Added " + j);
+                System.out.println("Added " + player);
                 attempted++;
             }
         }
