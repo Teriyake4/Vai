@@ -25,9 +25,10 @@ public class VaiUtil {
     }
 
     public static void addToCSVFile(File csvPath, String data) throws IOException {
-        int size = readCSVFile(csvPath).size() - 1;
+        int size = readCSVFile(csvPath).size();
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(csvPath, true))) {
-            writer.newLine();
+            if(size > 0)
+                writer.newLine();
             writer.write(data);
             writer.close();
         }
@@ -52,5 +53,14 @@ public class VaiUtil {
             return output;
         }
         return output;
+    }
+
+    public static void clearFile(File filePath) {
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, false))) {
+            writer.write("");
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 }
