@@ -1,4 +1,4 @@
-package com.teriyake.vai;
+package com.teriyake.vai.data;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.teriyake.stava.parser.MatchParser;
 import com.teriyake.stava.parser.PlayerParser;
+import com.teriyake.vai.VaiUtil;
 
 public class Stats {
     public static void main(String[] args) {
