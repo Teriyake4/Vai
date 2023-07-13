@@ -12,10 +12,10 @@ import com.teriyake.vai.VaiUtil;
 public class MatchToCSV {
     static boolean add = true;
     static boolean balanced = false;
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         int def = 0;
         int att = 0;
-        File csvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVMatchIndex.csv");
+        File csvPath = new File(VaiUtil.getTestDataPath(), "CSVMatchIndex.csv");
         File dataPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/match");
         String[] subPaths = dataPath.list();
         File playerPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/player");
@@ -45,7 +45,7 @@ public class MatchToCSV {
                     System.out.println("Already in file: " + match);
                     continue;
                 }
-                String bal = VaiUtil.readFile(new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVBalanced.csv"));
+                String bal = VaiUtil.readFile(new File(VaiUtil.getTestDataPath(), "CSVBalanced.csv"));
                 if(bal.contains(match)) {
                     System.out.println("Already in bal: " + match);
                     continue;

@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import com.teriyake.vai.VaiUtil;
 
 public class AllPlayersToCSV {
-    public static void main(String[] args) {
-        File csvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVAllPlayerIndex.csv");
+    public static void main(String[] args)  throws IOException {
+        File csvPath = new File(VaiUtil.getTestDataPath(), "CSVAllPlayerIndex.csv");
         File dataPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/player");
         String[] subPaths = dataPath.list();
         int total = 0;

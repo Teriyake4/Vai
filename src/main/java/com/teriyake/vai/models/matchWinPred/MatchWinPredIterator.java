@@ -22,7 +22,7 @@ import com.teriyake.stava.stats.player.PlayerMode;
 import com.teriyake.vai.VaiUtil;
 
 public class MatchWinPredIterator implements DataSetIterator {
-    private static File playerCsvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVPlayerIndex.csv");
+    private static File playerCsvPath;
     private File matchCsvPath;
     private int csvCursor;
     private int csvLength;
@@ -41,13 +41,14 @@ public class MatchWinPredIterator implements DataSetIterator {
     private ArrayList<String> allPlayers;
 
     public MatchWinPredIterator(File matchCsvP, int batch) throws IOException {
+        this.playerCsvPath = new File(VaiUtil.getTestDataPath(), "CSVPlayerIndex.csv");
         this.batch = batch;
         csvCursor = 0;
         String line = "";
         matchCsvPath = matchCsvP;
         // BufferedReader csvReader = new BufferedReader(new FileReader(matchCsvPath));
         matchCsv = VaiUtil.readCSVFile(matchCsvPath);
-        allPlayers = VaiUtil.readCSVFile(new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVAllPlayerIndex.csv"));
+        allPlayers = VaiUtil.readCSVFile(new File(VaiUtil.getTestDataPath(), "CSVAllPlayerIndex.csv"));
     }
 
     @Override
@@ -149,7 +150,7 @@ public class MatchWinPredIterator implements DataSetIterator {
                 // }
                 featureList[i][index + 1] = playerData.getMode("competitive").getRoundsWinPct() / 100;
                 featureList[i][index + 2] = playerData.getMode("competitive").getMatchesWinPct() / 100;
-                featureList[i][index + 3] = playerData.getMode("competitive").getKAST() / 100;
+                // featureList[i][index + 3] = playerData.getMode("competitive").getKAST() / 100;
                 // featureList[i][index + 5] = playerData.getMode("competitive").getRoundsWinPct() / 100;
                 // featureList[i][index + 2] = playerData.getAttackRoundsWinPct() / 100;
             }

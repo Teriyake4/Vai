@@ -18,7 +18,7 @@ import com.teriyake.stava.stats.player.PlayerMode;
 import com.teriyake.vai.VaiUtil;
 
 public class PlayerWinPctPredIterator implements DataSetIterator{
-    private static File csvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVPlayerIndex.csv");
+    private static File csvPath;
     private int csvCursor;
     private int csvLength;
     private int batch;
@@ -38,6 +38,7 @@ public class PlayerWinPctPredIterator implements DataSetIterator{
     private ArrayList<String> csv = new ArrayList<String>();
 
     public PlayerWinPctPredIterator(int batch) throws IOException {
+        csvPath = new File(VaiUtil.getTestDataPath(), "CSVPlayerIndex.csv");
         BufferedReader csvReader = new BufferedReader(new FileReader(csvPath));
         this.batch = batch;
         csvCursor = 0;

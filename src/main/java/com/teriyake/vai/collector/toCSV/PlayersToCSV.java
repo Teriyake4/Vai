@@ -9,8 +9,8 @@ import com.teriyake.stava.stats.Player;
 import com.teriyake.vai.VaiUtil;
 // ONLY RUN WITH ONE DEVICE ie: ENVY
 public class PlayersToCSV {
-    public static void main(String[] args) {
-        File csvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVPlayerIndex.csv");
+    public static void main(String[] args) throws IOException {
+        File csvPath = new File(VaiUtil.getTestDataPath(), "CSVPlayerIndex.csv");
         File dataPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/player");
         String[] subPaths = dataPath.list();
         int total = 0;
