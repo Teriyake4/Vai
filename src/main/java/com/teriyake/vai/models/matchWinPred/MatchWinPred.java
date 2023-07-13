@@ -76,8 +76,8 @@ public class MatchWinPred {
         try {
             UIServer uiServer = UIServer.getInstance();
             StatsStorage statsStorage = new InMemoryStatsStorage();
-            uiServer.attach(statsStorage);
             model.setListeners(new StatsListener(statsStorage, 1));
+            uiServer.attach(statsStorage);
         }
         catch(Exception e) { 
         }
