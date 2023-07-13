@@ -63,4 +63,11 @@ public class VaiUtil {
             e.printStackTrace();
         }
     }
+
+    public static File getTestDataPath() throws IOException {
+        // File file = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data"));
+        File file = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/");
+        file = file.getCanonicalFile();
+        return file;
+    }
 }
