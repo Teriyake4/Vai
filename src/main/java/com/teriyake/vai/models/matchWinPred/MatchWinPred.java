@@ -1,8 +1,10 @@
 package com.teriyake.vai.models.matchWinPred;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.deeplearning4j.core.storage.StatsStorage;
+import org.deeplearning4j.exception.DL4JException;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
@@ -17,6 +19,7 @@ import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.dataset.SplitTestAndTrain;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.learning.config.AdaGrad;
 import org.nd4j.linalg.learning.config.Adam;
@@ -31,27 +34,26 @@ public class MatchWinPred {
     private static boolean showInDepth = false;
     public static void main(String[] args) throws Exception {
         int batchSize = 56;
-        int seed = 123;
-        double learningRate = 0.012;
-        int numInputs = 40;
+        int seed = 111;
+        double learningRate = 0.006; // 0.004 explodes with extra hidden layer
+        int numInputs = 70;
         int numOutputs = 2;
-        int numHidden = 50; // 30
-        int numEpochs = 200; // 28
-
+        int numHidden = 75; // 30
+        int numEpochs = 95; // 200 explodes
 
         File balanced = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVBalanced.csv");
-        DataSetIterator trainingIterator = new MatchWinPredIterator(balanced, 90);
+        DataSetIterator trainingIterator = new MatchWinPredIterator(balanced, 106);
         DataSet trainingData = trainingIterator.next();
         trainingData.shuffle(seed);
 
         File match = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVMatchIndex.csv");
-        DataSetIterator testIterator = new MatchWinPredIterator(match, 31);
+        DataSetIterator testIterator = new MatchWinPredIterator(match, 33);
         DataSet testData = testIterator.next();
         // testData.shuffle(seed);
 
-        // SplitTestAndTrain testAndTrain = data.splitTestAndTrain(0.65);
-        // DataSet trainingData = testAndTrain.getTrain();
-        // DataSet testData = testAndTrain.getTest();
+        SplitTestAndTrain testAndTrain = trainingData.splitTestAndTrain(0.8);
+        trainingData = testAndTrain.getTrain();
+        testData = testAndTrain.getTest();
 
         log.info("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
@@ -59,12 +61,14 @@ public class MatchWinPred {
             .activation(Activation.RELU) // SOFTMAX/SIGMOID, lower epochs for softmax?
             .weightInit(WeightInit.XAVIER)
             .updater(new Adam(learningRate)) // Sgd
-            .l2(1e-6)
+            .l2(1e-3)
             .list()
             .layer(new DenseLayer.Builder().nIn(numInputs).nOut(numHidden)
                 .build())
             .layer(new DenseLayer.Builder().nIn(numHidden).nOut(numHidden)
                 .build())
+            // .layer(new DenseLayer.Builder().nIn(numHidden).nOut(numHidden)
+            //     .build())
             .layer(new OutputLayer.Builder(LossFunctions.LossFunction.XENT) // XENT
                 .activation(Activation.SIGMOID)
                 .nIn(numHidden).nOut(numOutputs).build())
@@ -79,7 +83,7 @@ public class MatchWinPred {
             model.setListeners(new StatsListener(statsStorage, 1));
             uiServer.attach(statsStorage);
         }
-        catch(Exception e) { 
+        catch(DL4JException e) {
         }
 
         // model.setListeners(new ScoreIterationListener(1));
