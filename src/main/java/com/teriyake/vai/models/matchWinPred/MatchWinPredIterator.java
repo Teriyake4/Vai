@@ -55,7 +55,8 @@ public class MatchWinPredIterator implements DataSetIterator {
     public DataSet next(int num) {
         int def = 0;
         int att = 0;
-        double[][] featureList = new double[num][4 * (10)]; // player stats
+        int featPerPlay = 7;
+        double[][] featureList = new double[num][featPerPlay * (10)]; // player stats
         // exists, RoundsWinPct
         // , KAST, RoundsWinPct, map MatchsWinPct, map MatchsWinPct exists
         double[][] labelList = new double[num][2]; // outcome
@@ -113,10 +114,12 @@ public class MatchWinPredIterator implements DataSetIterator {
             }
 
             int index = 0;
+            int numP = 0;
             for(String player : players.keySet()) { // iterates through players of match
                 if(players.get(player) == 0) {
                     featureList = addEmptyToDS(featureList, i, index);
-                    index++;
+                    index += featPerPlay;
+                    numP++;
                     continue;
                 }
                 File playerPath = null;
@@ -129,12 +132,14 @@ public class MatchWinPredIterator implements DataSetIterator {
                 }
                 if(playerPath == null) {
                     featureList = addEmptyToDS(featureList, i, index);
-                    index++;
+                    index += featPerPlay;
+                    numP++;
                     continue;
                 }
                 String json = VaiUtil.readFile(playerPath);
                 if(!PlayerParser.parsedJsonToPlayer(json).containsMode("competitive")) {
-                    index++;
+                    index += featPerPlay;
+                    numP++;
                     continue;
                 }
                 Player playerData = PlayerParser.parsedJsonToPlayer(json);
@@ -150,9 +155,12 @@ public class MatchWinPredIterator implements DataSetIterator {
                 // }
                 featureList[i][index + 1] = playerData.getMode("competitive").getRoundsWinPct() / 100;
                 featureList[i][index + 2] = playerData.getMode("competitive").getMatchesWinPct() / 100;
-                // featureList[i][index + 3] = playerData.getMode("competitive").getKAST() / 100;
-                // featureList[i][index + 5] = playerData.getMode("competitive").getRoundsWinPct() / 100;
-                // featureList[i][index + 2] = playerData.getAttackRoundsWinPct() / 100;
+                featureList[i][index + 3] = playerData.getMode("competitive").getKAST() / 100;
+                featureList[i][index + 4] = playerData.getMode("competitive").getAttackRoundsWinPct() / 100;
+                featureList[i][index + 5] = playerData.getMode("competitive").getDefenseRoundsWinPct() / 100;
+                featureList[i][index + 6] = playerData.getMode("competitive").getHeadshotsPercentage() / 100;
+                index += featPerPlay;
+                numP++;
             }
         }
         INDArray features = Nd4j.create(featureList);
@@ -167,7 +175,9 @@ public class MatchWinPredIterator implements DataSetIterator {
         dataSet[iValue][index + 1] = 0;
         dataSet[iValue][index + 2] = 0;
         dataSet[iValue][index + 3] = 0;
-        // dataSet[iValue][index + 4] = 0;
+        dataSet[iValue][index + 4] = 0;
+        dataSet[iValue][index + 5] = 0;
+        dataSet[iValue][index + 6] = 0;
         return dataSet;
     }
 
