@@ -20,7 +20,7 @@ public class Ocr {
         catch(IOException e) {
             e.printStackTrace();
         }
-        tesseract.setLanguage("eng");
+        tesseract.setLanguage("eng+kor+chi_tra+jpn");
         tesseract.setPageSegMode(6);
         tesseract.setOcrEngineMode(1);
     }
