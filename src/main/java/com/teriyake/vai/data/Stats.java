@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.teriyake.stava.parser.MatchParser;
 import com.teriyake.stava.parser.PlayerParser;
+import com.teriyake.stava.stats.Player;
 import com.teriyake.vai.VaiUtil;
 
 public class Stats {
@@ -16,7 +17,7 @@ public class Stats {
         int defWin = 0;
         int attWin = 0;
 
-        File csvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVMatchIndex.csv");
+        File csvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/StaticMatchBalIndex.csv");
         ArrayList<String> csv = VaiUtil.readCSVFile(csvPath);
         for(int i = 0; i < csv.size(); i++) {
             String line = csv.get(i);
@@ -58,6 +59,7 @@ public class Stats {
             int teamNum = 0;
             double attAvg = 0;
             double defAvg = 0;
+            double stat = 0;
             for(String player : players.keySet()) {
                 // System.out.println(player);
                 if(players.get(player) == 0) {
@@ -91,7 +93,15 @@ public class Stats {
                     continue;
                 }
                 String json = VaiUtil.readFile(playerPath);
-                if(!PlayerParser.parsedJsonToPlayer(json).containsMode("competitive")) {
+                Player playerStats = null;
+                if(json.contains("\"schema\": \"statsv2\"")) // unparsed json
+                    playerStats = PlayerParser.getPlayer(json);
+                else
+                    playerStats = PlayerParser.parsedJsonToPlayer(json);
+                    
+                boolean contains = playerStats.containsMode("competitive");
+                // boolean contains = playerStats.containsMap(map);
+                if(!contains|| playerStats == null) {
                     if(index == 5) {
                         defAvg = defAvg / teamNum;
                         teamNum = 0;
@@ -102,9 +112,11 @@ public class Stats {
                     index++;
                     continue;
                 }
-
+                // .getClutches() / playerStats.getMode("competitive").getMatchesPlayed()
+                stat = playerStats.getMode("competitive").getDefenseRoundsWinPct(); // STAT
+                // stat = playerStats.getMap(map).getFirstBloodsPerMatch();
                 if(index < 5) {
-                    defAvg += PlayerParser.parsedJsonToPlayer(json).getMode("competitive").getMatchesWinPct();
+                    defAvg += stat;
                     teamNum++;
                 }
                 if(index == 5) {
@@ -113,7 +125,7 @@ public class Stats {
                 }
 
                 if(index > 5) {
-                    attAvg += PlayerParser.parsedJsonToPlayer(json).getMode("competitive").getMatchesWinPct();
+                    attAvg += stat;
                     teamNum++;
                 }
                 if(index == 9) {
@@ -123,18 +135,20 @@ public class Stats {
             }
             String end = "";
             if(outcome.equals("attacker") && attAvg > defAvg) {
-                matchNum++;
                 end = "Att MATCH";
             }
             else if(outcome.equals("defender") && defAvg > attAvg) {
-                matchNum++;
                 end = "Def MATCH";
             }
             else {
                 end = outcome;
             }
+            // end = outcome.substring(0, 1).toUpperCase() + outcome.substring(1, 3);
             // System.out.println(outcome + " def: " + defAvg + "% att: " + attAvg + "% " + end);
-            System.out.println(defAvg + " - " + attAvg + " " + end);
+            System.out.println(defAvg + ", " + attAvg);
+            // System.out.println(end);
+            if(end.contains("MATCH"))
+                matchNum++;
         }
         System.out.println(matchNum + "/" + csv.size());
         System.out.println("def wins: " + defWin + " att wins: " + attWin);
