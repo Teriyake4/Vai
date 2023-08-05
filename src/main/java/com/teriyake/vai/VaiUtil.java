@@ -64,6 +64,16 @@ public class VaiUtil {
         }
     }
 
+    public static void writeFile(File filePath, String toWrite, boolean append) {
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, append))) {
+            writer.write(toWrite);
+            writer.close();
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static File getTestDataPath() throws IOException {
         // File file = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data"));
         File file = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/");
