@@ -58,6 +58,9 @@ public class CollectorClass {
                 else
                     e.printStackTrace();
             }
+            catch(NullPointerException e) {
+                System.out.println(player + " is invalid");
+            }
             addToTxt(player, isPrivate);
             if(data == null)
                 continue;
@@ -108,7 +111,7 @@ public class CollectorClass {
 
     // returns last player from already retrieved to file
     private void initToRet() throws FileNotFoundException, IOException {
-        File file = new File(filePath, "/HasRet.txt");
+        File file = new File(filePath, "/collection/HasRet.txt");
         ArrayList<String> output = VaiUtil.readCSVFile(file);
         for(int i = output.size() - 1; i >= 0; i--) {
             if(toRet.size() >= 1)
@@ -119,9 +122,9 @@ public class CollectorClass {
     }
 
     private void addToTxt(String player, boolean isPrivate) {
-        String file = "/HasRet.txt";
+        String file = "/collection/HasRet.txt";
         if(isPrivate)
-            file = "/Private.txt";
+            file = "/collection/Private.txt";
         File path = new File(filePath, file);
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(path, true))) {
             writer.newLine();
@@ -135,11 +138,11 @@ public class CollectorClass {
 
     private boolean isInTxt(String player) throws FileNotFoundException, IOException {
         String output = "";
-        File file = new File(filePath, "/HasRet.txt");
+        File file = new File(filePath, "/collection/HasRet.txt");
         output = VaiUtil.readFile(file);
         if(output.contains(player))
             return true;
-        file = new File(filePath, "/Private.txt");
+        file = new File(filePath, "/collection/Private.txt");
         output = VaiUtil.readFile(file);
         return output.contains(player);
     }
