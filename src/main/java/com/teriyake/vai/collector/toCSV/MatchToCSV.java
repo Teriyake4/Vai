@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.teriyake.stava.parser.MatchParser;
+import com.teriyake.stava.parser.PlayerParser;
+import com.teriyake.stava.stats.Player;
 import com.teriyake.vai.VaiUtil;
 
 public class MatchToCSV {
@@ -28,18 +30,6 @@ public class MatchToCSV {
             for(String match : matchPaths) { // match
                 total++;
                 File matchPath = new File(actPath, "/" + match + "/" + "match.json");
-                String json = VaiUtil.readFile(matchPath);
-                // System.out.println(MatchParser.getMode(json));
-                if(!MatchParser.getMode(json).equals("competitive"))
-                    continue;
-                String result = MatchParser.getWinningTeam(json);
-                if(result.equals("defender"))
-                    def++;
-                else if(result.equals("attacker"))
-                    att++;
-                else if(MatchParser.getWinningTeam(json).equals("tie"))
-                    continue;
-                
                 String csv = VaiUtil.readFile(csvPath);
                 if(csv.contains(match)) {
                     System.out.println("Already in file: " + match);
@@ -50,6 +40,19 @@ public class MatchToCSV {
                     System.out.println("Already in bal: " + match);
                     continue;
                 }
+                String json = VaiUtil.readFile(matchPath);
+                // System.out.println(matchPath.getCanonicalPath());
+                if(!MatchParser.getMode(json).equals("competitive"))
+                    continue;
+                String result = MatchParser.getWinningTeam(json);
+                if(result.equals("defender"))
+                    def++;
+                else if(result.equals("attacker"))
+                    att++;
+                else if(MatchParser.getWinningTeam(json).equals("tie"))
+                    continue;
+                
+                String map = MatchParser.getMap(json).toLowerCase();
 
                 // checking number of players per match are stored
                 int defP = 0;
@@ -62,6 +65,16 @@ public class MatchToCSV {
                             String[] playerList = playerActPath.list(); // list of player names within act
                             for(String player : playerList) { // player
                                 boolean exists = p.equals(player);
+                                if(exists) {
+                                    String jsonPlayerData = VaiUtil.readFile(new File(playerActPath, player + "/player.json"));
+                                    Player playerStats = null;
+                                    if(json.contains("\"schema\": \"statsv2\"")) // unparsed json
+                                        playerStats = PlayerParser.getPlayer(jsonPlayerData);
+                                    else
+                                        playerStats = PlayerParser.parsedJsonToPlayer(jsonPlayerData);
+                                    if(playerStats == null || !playerStats.containsMode("competitive") || !playerStats.containsMap(map))
+                                        exists = false;
+                                }
                                 if(exists && team.equals("defender")) {
                                     defP++;
                                     break;
