@@ -30,8 +30,11 @@ public class MatchRecognitionTest {
 
         System.out.println("\nPlayer");
         try {
-            File imagePath = new File("C:/Users/Ian/OneDrive/Pictures/Screenshots/Screenshot 2023-07-07 151125.png");
-            System.out.println(pAN.getSinglePlayerNameFromImage(imagePath));
+            // File imagePath = new File("C:/Users/Ian/OneDrive/Pictures/Screenshots/Screenshot 2023-07-07 151125.png");
+            File imagePath = new File("C:\\Users\\teriy\\OneDrive\\Pictures\\Screenshots\\Screenshot 2023-08-01 194136.png");
+            String name = pAN.getSinglePlayerNameFromImage(imagePath);
+            System.out.println(name);
+            VaiUtil.writeFile(new File("C:\\Users\\teriy\\OneDrive\\Projects\\Coding Projects\\Java Projects\\Vai\\vai\\src\\test\\java\\com\\teriyake\\vai\\ocrTestOutput.txt"), name, false);
         }
         catch(TesseractException e) {
             e.printStackTrace();
