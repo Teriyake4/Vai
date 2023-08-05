@@ -3,33 +3,29 @@ package com.teriyake.vai;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.teriyake.stava.parser.PlayerParser;
 import com.teriyake.stava.stats.Player;
 
 public class DataIterTest {
     public static void main(String[] args) throws IOException {
-        File file = new File("C:/Users/Ian/OneDrive/Projects/Coding Projects/Java Projects/Vai/vai/src/main/java/com/teriyake/vai/winPredFromComp/CSVPlayerIndex.csv");
-        ArrayList<String> data = VaiUtil.readCSVFile(file);
-        ArrayList<Player> players = new ArrayList<Player>();
-
-        for(int i = 0; i < data.size(); i++) {
-            String line = data.get(i);
-            int csvIndex = line.indexOf(",");
-            String dataPath = line.substring(csvIndex + 1);
-            File jsonPath = new File(dataPath);
-            String json = VaiUtil.readFile(jsonPath);
-            players.add(PlayerParser.parsedJsonToPlayer(json));
-        }
-        File test = new File("C:/Users/Ian/OneDrive/Projects/Coding Projects/Java Projects/Vai/vai/src/main/java/com/teriyake/vai/test.csv");
-        for(int i = 0; i < players.size(); i++) {
-            String stats = "";
-            // stats += players.get(i).getMode("competitive").getMatchesWinPct() + ",";
-            stats += players.get(i).getMode("competitive").getKADRatio();
-            // stats += players.get(i).getMode("competitive").getScorePerMatch() + ",";
-            // stats += players.get(i).getMode("competitive").getScorePerRound() + ",";
-            // stats += players.get(i).getMode("competitive").getKillsPerRound();
-            VaiUtil.addToCSVFile(test, stats);
+        File pathsFilePath = new File(VaiUtil.getTestDataPath(), "thing.txt");
+        ArrayList<String> paths = VaiUtil.readCSVFile(pathsFilePath);
+        for(String path : paths) {
+            File dataPath = new File(path);
+            String data = VaiUtil.readFile(dataPath);
+            if(!data.substring(0, 1).equals("\"") && !data.substring(data.length() - 1, data.length()).equals("\""))
+                continue;
+            data = data.substring(1, data.length() - 1);
+            data = data.replaceAll(Matcher.quoteReplacement("\\"), "");
+            Gson gson = new GsonBuilder().setPrettyPrinting().setLenient().create();
+            data = gson.toJson(gson.fromJson(data, Object.class));
+            // System.out.println(data);
+            VaiUtil.writeFile(dataPath, data, false);
+            System.out.println(path);
         }
     }
 }
