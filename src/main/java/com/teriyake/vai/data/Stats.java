@@ -17,7 +17,7 @@ public class Stats {
         int defWin = 0;
         int attWin = 0;
 
-        File csvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/StaticMatchBalIndex.csv");
+        File csvPath = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVMatchIndex.csv");
         ArrayList<String> csv = VaiUtil.readCSVFile(csvPath);
         for(int i = 0; i < csv.size(); i++) {
             String line = csv.get(i);
@@ -27,7 +27,7 @@ public class Stats {
             //     int userIndex = dataPath.indexOf("teriy");
             //     dataPath = dataPath.substring(0, userIndex) + "Ian" + dataPath.substring(userIndex + 5);
             // }
-            File jsonPath = new File(dataPath);
+            File jsonPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/" + dataPath);
             String matchJson = VaiUtil.readFile(jsonPath);
             String outcome = MatchParser.getWinningTeam(matchJson);
             String map = MatchParser.getMap(matchJson).toLowerCase();
