@@ -3,6 +3,7 @@ package com.teriyake.vai.collector.toCSV;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,15 +14,23 @@ import com.teriyake.vai.VaiUtil;
 
 public class MatchToCSV {
     static boolean add = true;
-    static boolean balanced = false;
+    static boolean balanced = true;
     public static void main(String[] args) throws IOException {
         int def = 0;
         int att = 0;
         File csvPath = new File(VaiUtil.getTestDataPath(), "CSVMatchIndex.csv");
         File dataPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/match");
         String[] subPaths = dataPath.list();
-        File playerPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/player");
+        File playerPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/player/");
         String[] playerActPaths = playerPath.list();
+        Map<String, File> playerListAndPath = new HashMap<String, File>();
+        for(String act : playerActPaths) {
+            File actPath = new File(playerPath, "\\" + act);
+            String[] playerPaths = actPath.list();
+            for(String player : playerPaths) {
+                playerListAndPath.put(player, new File(playerPath, act + "/" + player + "/player.json"));
+            }
+        }
         int total = 0;
         int attempted = 0;
         for(String act : subPaths) { // act folders
@@ -42,7 +51,9 @@ public class MatchToCSV {
                 }
                 String json = VaiUtil.readFile(matchPath);
                 // System.out.println(matchPath.getCanonicalPath());
-                if(!MatchParser.getMode(json).equals("competitive"))
+                // if(!MatchParser.getMode(json).equals("competitive") || !MatchParser.getMode(json).equals("premier"))
+                //     continue;
+                if(!MatchParser.getMode(json).equals("premier"))
                     continue;
                 String result = MatchParser.getWinningTeam(json);
                 if(result.equals("defender"))
@@ -60,33 +71,34 @@ public class MatchToCSV {
                 Map<String, ArrayList<String>> players = MatchParser.getTeams(json);
                 for(String team : players.keySet()) { // both teams
                     for(String p : players.get(team)) { // team
-                        for(String playerAct : playerActPaths) { // act folders of all players
-                            File playerActPath = new File(playerPath, "/" + playerAct);
-                            String[] playerList = playerActPath.list(); // list of player names within act
-                            for(String player : playerList) { // player
-                                boolean exists = p.equals(player);
-                                if(exists) {
-                                    String jsonPlayerData = VaiUtil.readFile(new File(playerActPath, player + "/player.json"));
-                                    Player playerStats = null;
-                                    if(json.contains("\"schema\": \"statsv2\"")) // unparsed json
-                                        playerStats = PlayerParser.getPlayer(jsonPlayerData);
-                                    else
-                                        playerStats = PlayerParser.parsedJsonToPlayer(jsonPlayerData);
-                                    if(playerStats == null || !playerStats.containsMode("competitive") || !playerStats.containsMap(map))
-                                        exists = false;
-                                }
-                                if(exists && team.equals("defender")) {
-                                    defP++;
-                                    break;
-                                }
-                                else if(exists && team.equals("attacker")) {
-                                    attP++;
-                                    break;
-                                }
+                        boolean exists = playerListAndPath.containsKey(p);
+                        if(exists) {
+                            String jsonPlayerData = VaiUtil.readFile(playerListAndPath.get(p).getCanonicalFile());
+                            // System.out.println(playerListAndPath.get(p));
+                            Player playerStats = null;
+                            if(jsonPlayerData.contains("\"schema\": \"statsv2\"")) // unparsed json
+                                playerStats = PlayerParser.getPlayer(jsonPlayerData);
+                            else
+                                playerStats = PlayerParser.parsedJsonToPlayer(jsonPlayerData);
+                            if(playerStats == null || !(playerStats.containsMode("competitive") || playerStats.containsMode("premier"))) {
+                                exists = false;
+                                // System.out.println(p + " " + playerStats.containsMode("competitive") + " " + playerStats.containsMode("premier"));
                             }
+                            // else if(!playerStats.containsMode("competitive") && !playerStats.containsMode("premier")) {
+                            //     exists = false;
+                            // }
+                        }
+                        if(exists && team.equals("defender")) {
+                            defP++;
+                            continue;
+                        }
+                        else if(exists && team.equals("attacker")) {
+                            attP++;
+                            continue;
                         }
                     }
                 }
+                System.out.println("def: " + defP + " attP: " + attP);
                 if(balanced && (defP <= 3 || attP <= 3) || (defP + attP < 8)) // bal
                     continue;
                 else if((defP <= 2 || attP <= 2) || (defP + attP < 5))
@@ -94,7 +106,8 @@ public class MatchToCSV {
                 ArrayList<String> csvArray = VaiUtil.readCSVFile(csvPath);
                 if(add) {
                     try {
-                        VaiUtil.addToCSVFile(csvPath, csvArray.size() + "," + matchPath.getCanonicalPath());
+                        VaiUtil.addToCSVFile(csvPath, csvArray.size() + "," +
+                            "StaVa/data/match/" + act + "/" + match + "/" + "match.json");
                     }
                     catch(IOException e) {
                         e.printStackTrace();
@@ -116,8 +129,10 @@ public class MatchToCSV {
         int def = 0;
         int att = 0;
         Map<String, Integer> matchO = new ConcurrentHashMap<String, Integer>();
+        String introPath = System.getProperty("user.home") + "/OneDrive/Documents/";
         for(String line : csv) {
             String path = line.substring(line.indexOf(",") + 1);
+            path = introPath + path;
             String json = VaiUtil.readFile(new File(path));
             String result = MatchParser.getWinningTeam(json);
             if(result.equals("defender")) {
@@ -146,7 +161,7 @@ public class MatchToCSV {
         for(String path : matchO.keySet()) {
             if(add) {
                 try {
-                    VaiUtil.addToCSVFile(csvPath, i + "," + path);
+                    VaiUtil.addToCSVFile(csvPath, i + "," + path.substring(introPath.length()));
                 }
                 catch(IOException e) {
                     e.printStackTrace();
@@ -154,5 +169,9 @@ public class MatchToCSV {
            }
            i++;
         }
+    }
+
+    public static boolean checkPlayerValid(File playerPath) {
+        return false;
     }
 }
