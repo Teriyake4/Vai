@@ -36,7 +36,9 @@ public class PlayersToCSV {
                 if(inCSV)
                     continue;
                 try {
-                    VaiUtil.addToCSVFile(csvPath, csv.size() + "," + playerPath.getCanonicalPath());
+                    String path = playerPath.getCanonicalPath();
+                    path = VaiUtil.changeToTeriy(path);
+                    VaiUtil.addToCSVFile(csvPath, csv.size() + "," + path);
                 }
                 catch(IOException e) {
                     e.printStackTrace();
