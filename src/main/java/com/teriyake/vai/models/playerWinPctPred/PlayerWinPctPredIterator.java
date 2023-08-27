@@ -101,18 +101,14 @@ public class PlayerWinPctPredIterator implements DataSetIterator{
                 else if(min > featureList[r][c])
                     min = featureList[r][c];
             }
-            if(c == 1) {
-                max = 1500;
-                min = 0;
-            }
-            else if(c == 2) {
+            // if(c == 1) {
+            //     max = 1500;
+            //     min = 0;
+            // }
+            if(c == 2) {
                 max = 750;
                 min = 0;
             }
-            // else if(c == 5) { // produces worse results?
-            //     max = 6;
-            //     min = 0;
-            // }
             else if(c == 8) {
                 max = 140;
                 min = 0;
@@ -120,6 +116,10 @@ public class PlayerWinPctPredIterator implements DataSetIterator{
             else if(c == 3 || c == 7) {
                 min = 0;
             }
+            // else if(c == 5) { // produces worse results?
+            //     max = 6;
+            //     min = 0;
+            // }
             for(int r = 0; r < featureList.length; r++) {
                 featureList[r][c] = (featureList[r][c] - min) / (max - min);
             }
