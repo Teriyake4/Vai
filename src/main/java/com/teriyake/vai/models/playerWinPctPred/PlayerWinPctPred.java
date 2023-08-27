@@ -5,8 +5,10 @@ import java.io.File;
 import org.deeplearning4j.core.storage.StatsStorage;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
+import org.deeplearning4j.nn.conf.layers.ConvolutionLayer;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
+import org.deeplearning4j.nn.layers.LayerHelper;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
@@ -39,20 +41,20 @@ public class PlayerWinPctPred {
         // Sgd: lr = 0.11, hid = 12 | 5.29028e-01
         // AdaGrad: lr = 0.05, hid = 12 | 5.89893e-01
 
-        int batchSize = 673; // 225 seed: 123
-        int seed = 222; // 123 // 333
+        int batchSize = 1739; // 225 seed: 123
+        int seed = 123; // 123 // 333
         double learningRate = 0.001; // 0.001
         int numInputs = 9;
         int numOutputs = 1;
         int numHidden = 15;
-        int numEpochs = 5500; // 2400
+        int numEpochs = 20000; // 2400
 
 
         DataSetIterator iterator = new PlayerWinPctPredIterator(batchSize);
         DataSet data = iterator.next();
         data.shuffle(seed);
 
-        SplitTestAndTrain testAndTrain = data.splitTestAndTrain(0.852); // 0.65
+        SplitTestAndTrain testAndTrain = data.splitTestAndTrain(0.8); // 0.65
         DataSet trainingData = testAndTrain.getTrain();
         DataSet testData = testAndTrain.getTest();
         
@@ -60,6 +62,7 @@ public class PlayerWinPctPred {
 
         log.info("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+            .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
             .seed(seed)
             .activation(Activation.IDENTITY) // IDENTITY
             .weightInit(WeightInit.XAVIER)
@@ -80,7 +83,7 @@ public class PlayerWinPctPred {
                     .nIn(numHidden).nOut(numOutputs).build())
             .build();
 
-        
+
         MultiLayerNetwork model = new MultiLayerNetwork(conf);
         model.init();
         try {
@@ -107,7 +110,7 @@ public class PlayerWinPctPred {
         System.out.println("Prediction - Actual");
         for(int i = 0; i < output.rows(); i++) {
             // System.out.println(output.getDouble(i) + " - " + testData.getLabels().getDouble(i));
-            System.out.println(output.getDouble(i)); // Predicted
+            // System.out.println(output.getDouble(i)); // Predicted
             // System.out.println(testData.getLabels().getDouble(i)); // Actual
         }
         System.out.println("Seed: " + seed);
