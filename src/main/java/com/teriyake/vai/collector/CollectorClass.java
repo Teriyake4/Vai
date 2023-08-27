@@ -9,27 +9,35 @@ import java.util.ArrayList;
 
 import com.teriyake.stava.HttpStatusException;
 import com.teriyake.stava.Retriever;
+import com.teriyake.stava.parser.MatchParser;
 import com.teriyake.stava.stats.Player;
 import com.teriyake.vai.VaiUtil;
 
 public class CollectorClass {
     private Retriever ret;
     private int numToRet;
-    private File filePath; // filepath of list of players already retrieved
+    private File vaiPath; // filepath of list of players already retrieved
+    private File stavaPath;
     // private File retPath;
     private ArrayList<String> toRet;
+    private ArrayList<String> matchesCollected;
+    private ArrayList<String> playersCollected;
     // private ArrayList<String> attempted;
 
     public CollectorClass(Retriever retriever, int numRet, File path, String start) throws FileNotFoundException, IOException {
         ret = retriever;
         numToRet = numRet;
-        filePath = path;
+        vaiPath = new File(path, "Vai/");
+        stavaPath = new File(path, "StaVa/data/");
         toRet = new ArrayList<String>();
+        matchesCollected = new ArrayList<String>();
+        playersCollected = new ArrayList<String>();
         if(start.equals(""))
             initToRet();
         else
             toRet.add(start);
-
+        addAlreadyCollectedMatches();
+        addAlreadyCollectedPlayers();
     }
 
     public void collect() throws FileNotFoundException, IOException {
@@ -75,7 +83,9 @@ public class CollectorClass {
             timeBuffer(false);
             String[] toAdd = null;
             try {
-                toAdd = ret.getPlayersFromRecentMatch(toRet.get(initSize - i));
+                // toAdd = ret.getPlayersFromRecentMatch(toRet.get(initSize - i), "premier"); // premier match list
+                System.out.println("Attempting match from " + toRet.get(initSize - i));
+                toAdd = getPlayersFromValidMatch(toRet.get(initSize - i));
             }
             catch(HttpStatusException e) {
                 if(e.getStatusCode() == 451)
@@ -99,9 +109,13 @@ public class CollectorClass {
                     if(contains)
                         break;
                 }
-                if(!isInTxt(player)) {
+                if(!playersCollected.contains(player)) {
                     toRet.add(player);
+                    playersCollected.add(player);
                     System.out.println("Added " + player + " to list");
+                }
+                else {
+                    System.out.println(player + " is collected");
                 }
             }
             if(initSize < toRet.size())
@@ -111,7 +125,7 @@ public class CollectorClass {
 
     // returns last player from already retrieved to file
     private void initToRet() throws FileNotFoundException, IOException {
-        File file = new File(filePath, "/collection/HasRet.txt");
+        File file = new File(vaiPath, "/collection/HasRet.txt");
         ArrayList<String> output = VaiUtil.readCSVFile(file);
         for(int i = output.size() - 1; i >= 0; i--) {
             if(toRet.size() >= 1)
@@ -121,11 +135,62 @@ public class CollectorClass {
         }
     }
 
+    private String[] getPlayersFromValidMatch(String playerMatch) throws HttpStatusException {
+        String[] matches = ret.getRecentMatches(playerMatch, "premier");
+        timeBuffer(true);
+        ArrayList<String> players = new ArrayList<String>();
+        for(String matchID : matches) {
+            if(matchesCollected.contains(matchID))
+                continue;
+            matchesCollected.add(matchID);
+            String match = ret.getMatch(matchID);
+            String[] tempPlayers = MatchParser.getPlayers(match);
+            for(String player : tempPlayers) {
+                if(!playersCollected.contains(player))
+                    players.add(player);
+            }
+            if(players.size() > 0)
+                break;
+        }
+        if(players.size() == 0)
+            return null;
+        String[] toReturn = new String[players.size()];
+        for(int i = 0; i < toReturn.length; i++) {
+            toReturn[i] = players.get(i);
+        }
+        return toReturn;
+    }
+
+    private void addAlreadyCollectedMatches() {
+        File matchPath = new File(stavaPath, "match/");
+        String[] actPaths = matchPath.list();
+        for(String act : actPaths) { // act folders
+            File actPath = new File(matchPath, "/" + act);
+            String[] matchPaths = actPath.list();
+            for(String match : matchPaths) { // match
+                matchesCollected.add(match);
+            }
+        }
+    }
+
+    private void addAlreadyCollectedPlayers() {
+        File playerPath = new File(stavaPath, "player/");
+        String[] actPaths = playerPath.list();
+        for(String act : actPaths) { // act folders
+            File actPath = new File(playerPath, "/" + act);
+            String[] playerPaths = actPath.list();
+            for(String player : playerPaths) { // match
+                playersCollected.add(player);
+            }
+        }
+    }
+
+
     private void addToTxt(String player, boolean isPrivate) {
         String file = "/collection/HasRet.txt";
         if(isPrivate)
             file = "/collection/Private.txt";
-        File path = new File(filePath, file);
+        File path = new File(vaiPath, file);
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(path, true))) {
             writer.newLine();
             writer.write(player);
@@ -138,11 +203,11 @@ public class CollectorClass {
 
     private boolean isInTxt(String player) throws FileNotFoundException, IOException {
         String output = "";
-        File file = new File(filePath, "/collection/HasRet.txt");
+        File file = new File(vaiPath, "/collection/HasRet.txt");
         output = VaiUtil.readFile(file);
         if(output.contains(player))
             return true;
-        file = new File(filePath, "/collection/Private.txt");
+        file = new File(vaiPath, "/collection/Private.txt");
         output = VaiUtil.readFile(file);
         return output.contains(player);
     }
@@ -152,7 +217,7 @@ public class CollectorClass {
         if(isPrivate)
             smallTime = (int) (Math.random() * 5) + 1;
         else
-            smallTime = (int) (Math.random() * 118) + 3;
+            smallTime = (int) (Math.random() * 118) + 3; // 118
         System.out.println("Waiting " + smallTime + " sec");
         smallTime *= 1000;
         try {
