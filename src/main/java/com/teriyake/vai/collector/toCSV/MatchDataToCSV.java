@@ -23,7 +23,7 @@ public class MatchDataToCSV {
     final static boolean BALANCE = true;
     final static String MATCH_TYPE = "premier";
     final static int NUM_FEATURES = 14 + AGENTS.length;
-    final static int NUM_MISSING = 9;
+    final static int NUM_IN = 9;
 
     static Map<String, File> playerListAndPath;
     static File csvPath;
@@ -73,7 +73,7 @@ public class MatchDataToCSV {
                     }
                 }
                 String toWrite = "";
-                if(numPlayers <= NUM_MISSING)
+                if(numPlayers < NUM_IN)
                     continue;
                 for(int i = 0; i < statsSingleLine.length; i++) {
                     toWrite += statsSingleLine[i] + ",";
