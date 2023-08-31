@@ -3,10 +3,6 @@ package com.teriyake.vai.models.matchWinPred;
 import java.io.File;
 import java.util.Map;
 
-import org.datavec.api.records.reader.RecordReader;
-import org.deeplearning4j.core.storage.StatsStorage;
-import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
-import org.deeplearning4j.exception.DL4JException;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
@@ -37,9 +33,11 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.teriyake.vai.VaiUtil;
+
 public class MatchWinPred {
     private static Logger log = LoggerFactory.getLogger(MatchWinPred.class);
-    private static boolean showInDepth = true;
+    private static boolean showInDepth = false;
     private static boolean save = false;
     public static void main(String[] args) throws Exception {
         int featPerPlay = 14 + 22;
@@ -48,23 +46,23 @@ public class MatchWinPred {
         double learningRate = 0.0013; // 0.001 @ 49
         int numInputs = 10 * featPerPlay;
         int numOutputs = 2;
-        int numHidden = 90; // 70  0 hiddens
-        int numEpochs = 215; // 100
+        int numHidden = 10; // 10  0 hiddens
+        int numEpochs = 300; // 100
         double threshold = 0.50;
 
-        File trainingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTest.csv");
-        DataSetIterator trainingIterator = new MatchWinPredIterator(trainingData, 232, featPerPlay);
+        File trainingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTrain.csv");
+        DataSetIterator trainingIterator = new MatchWinPredIterator(trainingData, VaiUtil.readCSVFile(trainingData).size(), featPerPlay);
         DataSet trainData = trainingIterator.next();
         trainData.shuffle(seed);
 
-        File testingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTrain.csv");
-        DataSetIterator testIterator = new MatchWinPredIterator(testingData, 70, featPerPlay);
-        DataSet testData = testIterator.next();
-        testData.shuffle(seed);
+        // File testingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredOther.csv");
+        // DataSetIterator testIterator = new MatchWinPredIterator(testingData, VaiUtil.readCSVFile(testingData).size(), featPerPlay);
+        // DataSet testData = testIterator.next();
+        // testData.shuffle(seed);
 
-        // SplitTestAndTrain testAndTrain = trainData.splitTestAndTrain(0.7);
-        // trainData = testAndTrain.getTrain();
-        // DataSet testData = testAndTrain.getTest();
+        SplitTestAndTrain testAndTrain = trainData.splitTestAndTrain(0.7);
+        trainData = testAndTrain.getTrain();
+        DataSet testData = testAndTrain.getTest();
 
         log.info("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
@@ -115,7 +113,7 @@ public class MatchWinPred {
             testLoss[i] = model.score(testData);
             trainAccur[i] = trainEval.accuracy();
             testAccur[i] = testEval.accuracy();
-            if(i % 20 == 0) {
+            if(i % 100 == 0) {
                 log.info("Iteration: " + i + " =Score= Train: " + trainLoss[i] + " - Test: " + testLoss[i] +
                     " =Accuracy= Train: " + trainAccur[i] + " - Test: " + testAccur[i]);
                 // System.out.println("Score - Train: " + model.score(trainData) + " - Test: " + model.score(testData));
