@@ -14,11 +14,6 @@ import org.nd4j.linalg.dataset.api.DataSetPreProcessor;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 
-import com.teriyake.stava.parser.MatchParser;
-import com.teriyake.stava.parser.PlayerParser;
-import com.teriyake.stava.stats.Player;
-import com.teriyake.stava.stats.player.PlayerMap;
-import com.teriyake.stava.stats.player.PlayerMode;
 import com.teriyake.vai.VaiUtil;
 
 public class MatchWinPredIterator implements DataSetIterator {
