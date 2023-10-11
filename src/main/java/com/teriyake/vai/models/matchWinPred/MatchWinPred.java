@@ -42,7 +42,7 @@ public class MatchWinPred {
         int numInputs = 10 * featPerPlay;
         int numOutputs = 2;
         int numHidden = 13; // 10
-        int numEpochs = 5000; // 100
+        int numEpochs = 2000; // 100
         double threshold = 0.50;
 
         File trainingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTrain.csv");
@@ -50,14 +50,14 @@ public class MatchWinPred {
         DataSet trainData = trainingIterator.next();
         trainData.shuffle(seed);
 
-        File testingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredOther.csv");
-        DataSetIterator testIterator = new MatchWinPredIterator(testingData, VaiUtil.readCSVFile(testingData).size(), featPerPlay, false);
-        DataSet testData = testIterator.next();
-        testData.shuffle(seed);
+        // File testingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTest.csv");
+        // DataSetIterator testIterator = new MatchWinPredIterator(testingData, VaiUtil.readCSVFile(testingData).size(), featPerPlay, false);
+        // DataSet testData = testIterator.next();
+        // testData.shuffle(seed);
 
-        // SplitTestAndTrain testAndTrain = trainData.splitTestAndTrain(0.9); // 0.78
-        // trainData = testAndTrain.getTrain();
-        // DataSet testData = testAndTrain.getTest();
+        SplitTestAndTrain testAndTrain = trainData.splitTestAndTrain(0.85); // 0.78
+        trainData = testAndTrain.getTrain();
+        DataSet testData = testAndTrain.getTest();
 
         log.info("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
