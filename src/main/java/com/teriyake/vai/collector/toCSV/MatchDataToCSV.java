@@ -11,19 +11,18 @@ import com.teriyake.stava.parser.PlayerParser;
 import com.teriyake.stava.stats.Player;
 import com.teriyake.stava.stats.player.PlayerMode;
 import com.teriyake.vai.VaiUtil;
+import com.teriyake.vai.data.GameValues;
 
 public class MatchDataToCSV {
-    final static String[] AGENTS = {
-        "brimstone", "phoenix", "sage", "sova", "viper", "cypher", "reyna", 
-        "killjoy", "breach", "omen", "jett", "raze", "skye", "yoru", "astra", 
-        "kay/o", "chamber", "neon", "fade", "harbor", "gecko", "deadlock"
-    };
-
-    final static String CSV = "MatchWinPredTrain.csv";
-    final static boolean BALANCE = true;
+    final static String CSV = "MatchWinPredOther.csv";
+    final static boolean BALANCE = false;
     final static String MATCH_TYPE = "premier";
-    final static int NUM_FEATURES = 14 + AGENTS.length;
-    final static int NUM_IN = 9;
+    final static int NUM_FEATURES = 14 + GameValues.AGENT_LIST.length;
+    // number in inclusive
+    final static int MAX_NUM_IN = 11; // 11 to include all players
+    final static int MIN_NUM_IN = 7;
+    // 7 max, 2 min other
+    // 11 max, 8 min train
 
     static Map<String, File> playerListAndPath;
     static File csvPath;
@@ -40,8 +39,9 @@ public class MatchDataToCSV {
             File actPath = new File(dataPath, "/" + act);
             String[] matchPaths = actPath.list();
             for(String match : matchPaths) { // match
-                double[] statsSingleLine = new double[(NUM_FEATURES * 10) + 1];
-                // first value is defense win (1) or loss (0)
+                System.out.println(match);
+                double[] statsSingleLine = new double[(NUM_FEATURES * 10) + 3];
+                // first value is defense win (1) or loss (0), second and third are rounds won def wins, att wins respectivley
                 if(attemptedMatches.contains(match))
                     continue;
                 else
@@ -60,21 +60,26 @@ public class MatchDataToCSV {
                 }
                 else if(result.equals("tie"))
                     continue;
-                int dataIndex = 1;
+                statsSingleLine[1] = MatchParser.getDefRoundsWon(matchJson);
+                statsSingleLine[2] = MatchParser.getAttRoundsWon(matchJson);
+                int dataIndex = 3;
                 Map<String, ArrayList<String>> playersFromMatch = MatchParser.getTeams(matchJson);
                 String[] order = {"defender", "attacker"}; // to make sure players are in proper order
                 int numPlayers = 0;
                 for(int ord = 0; ord < order.length; ord++) {
                     for(String player : playersFromMatch.get(order[ord])) {
+                        System.out.print(player + " ");
                         double[] singlePlayerData = getPlayerData(player, MatchParser.getAgentOfPlayer(matchJson, player), order[ord]);
                         dataIndex = addPlayerStatsToLine(statsSingleLine, singlePlayerData, dataIndex);
                         if(singlePlayerData[1] == 1)
                             numPlayers++;
                     }
                 }
+                System.out.println();
                 String toWrite = "";
-                if(numPlayers < NUM_IN)
+                if(numPlayers < MIN_NUM_IN || numPlayers > MAX_NUM_IN)
                     continue;
+                System.out.println(numPlayers);
                 for(int i = 0; i < statsSingleLine.length; i++) {
                     toWrite += statsSingleLine[i] + ",";
                 }
@@ -107,16 +112,23 @@ public class MatchDataToCSV {
         ArrayList<String> defData = new ArrayList<String>();
         ArrayList<String> attData = new ArrayList<String>();
         ArrayList<String> allData = VaiUtil.readCSVFile(csvPath);
+        int def = 0;
+        int att = 0;
         for(String line : allData) {
-            if(line.substring(0, 1).equals("1"))
+            if(line.substring(0, 1).equals("1")) {
                 defData.add(line);
-            else if(line.substring(0, 1).equals("0"))
+                def++;
+            }
+            else if(line.substring(0, 1).equals("0")) {
                 attData.add(line);
+                att++;
+            }
         }
+        System.out.println("Def: " + def + " Att: " + att);
         while(defData.size() != attData.size()) {
             if(defData.size() > attData.size())
                 defData.remove(defData.size() - 1);
-            else if(attData.size() > attData.size())
+            else if(attData.size() > defData.size())
                 attData.remove(attData.size() - 1);
         }
         VaiUtil.clearFile(csvPath);
@@ -184,8 +196,8 @@ public class MatchDataToCSV {
 
     public static double[] setAgent(double[] data, String agent) {
         int agentIndex = 0;
-        for(int i = 0; i < AGENTS.length; i++) {
-            if(agent.equals(AGENTS[i]))
+        for(int i = 0; i < GameValues.AGENT_LIST.length; i++) {
+            if(agent.equals(GameValues.AGENT_LIST[i]))
                 agentIndex = i;
         }
         for(int i = 14; i < NUM_FEATURES; i++) {
