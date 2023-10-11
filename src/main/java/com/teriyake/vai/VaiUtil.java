@@ -11,12 +11,10 @@ import java.util.ArrayList;
 public class VaiUtil {
     public static ArrayList<String> readCSVFile(File filePath) {
         ArrayList<String> output = new ArrayList<String>();
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+        try(BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
             while((line = reader.readLine()) != null)
                 output.add(line);
-            reader.close();
         }
         catch(Exception e) {
             e.printStackTrace();
