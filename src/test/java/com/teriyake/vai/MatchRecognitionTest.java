@@ -2,6 +2,7 @@ package com.teriyake.vai;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.teriyake.vai.models.ocr.Ocr;
@@ -11,7 +12,7 @@ import net.sourceforge.tess4j.TesseractException;
 public class MatchRecognitionTest {
     public static void main(String[] args ) {
         Ocr pAN = new Ocr(new File(System.getProperty("user.home") + "/OneDrive/Projects/Coding Projects/Java Projects/External Libraries/Tess4J/tessdata"));
-        ArrayList<Map<String, String>> output = new ArrayList<Map<String, String>>();
+        List<Map<String, String>> output = null;
         try {
             File imagePath = new File(VaiUtil.getTestDataPath().getCanonicalPath(), "/images/TestMatchCrop.png");
             output = pAN.getPlayersAgentsFromImage(imagePath);
