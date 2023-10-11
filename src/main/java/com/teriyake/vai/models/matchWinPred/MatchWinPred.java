@@ -1,7 +1,6 @@
 package com.teriyake.vai.models.matchWinPred;
 
 import java.io.File;
-import java.util.Map;
 
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -9,9 +8,6 @@ import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
-import org.deeplearning4j.ui.api.UIServer;
-import org.deeplearning4j.ui.model.stats.StatsListener;
-import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
 import org.deeplearning4j.util.ModelSerializer;
 import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
@@ -26,9 +22,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.SplitTestAndTrain;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
-import org.nd4j.linalg.learning.config.AdaGrad;
 import org.nd4j.linalg.learning.config.Adam;
-import org.nd4j.linalg.learning.config.Sgd;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,32 +31,33 @@ import com.teriyake.vai.VaiUtil;
 
 public class MatchWinPred {
     private static Logger log = LoggerFactory.getLogger(MatchWinPred.class);
-    private static boolean showInDepth = false;
+    private static boolean showInDepth = true;
     private static boolean save = false;
+    private static boolean train = true;
     public static void main(String[] args) throws Exception {
         int featPerPlay = 14 + 22;
         int batchSize = 56;
-        int seed = 123;
-        double learningRate = 0.0013; // 0.001 @ 49
+        int seed = 1;
+        double learningRate = 0.0014; // 0.001 @ 49
         int numInputs = 10 * featPerPlay;
         int numOutputs = 2;
-        int numHidden = 10; // 10  0 hiddens
-        int numEpochs = 300; // 100
+        int numHidden = 13; // 10
+        int numEpochs = 5000; // 100
         double threshold = 0.50;
 
         File trainingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTrain.csv");
-        DataSetIterator trainingIterator = new MatchWinPredIterator(trainingData, VaiUtil.readCSVFile(trainingData).size(), featPerPlay);
+        DataSetIterator trainingIterator = new MatchWinPredIterator(trainingData, VaiUtil.readCSVFile(trainingData).size(), featPerPlay, false);
         DataSet trainData = trainingIterator.next();
         trainData.shuffle(seed);
 
-        // File testingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredOther.csv");
-        // DataSetIterator testIterator = new MatchWinPredIterator(testingData, VaiUtil.readCSVFile(testingData).size(), featPerPlay);
-        // DataSet testData = testIterator.next();
-        // testData.shuffle(seed);
+        File testingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredOther.csv");
+        DataSetIterator testIterator = new MatchWinPredIterator(testingData, VaiUtil.readCSVFile(testingData).size(), featPerPlay, false);
+        DataSet testData = testIterator.next();
+        testData.shuffle(seed);
 
-        SplitTestAndTrain testAndTrain = trainData.splitTestAndTrain(0.7);
-        trainData = testAndTrain.getTrain();
-        DataSet testData = testAndTrain.getTest();
+        // SplitTestAndTrain testAndTrain = trainData.splitTestAndTrain(0.9); // 0.78
+        // trainData = testAndTrain.getTrain();
+        // DataSet testData = testAndTrain.getTest();
 
         log.info("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
@@ -70,12 +65,12 @@ public class MatchWinPred {
             .activation(Activation.RELU) // SOFTMAX/SIGMOID, lower epochs for softmax?
             .weightInit(WeightInit.XAVIER)
             .updater(new Adam(learningRate)) // Adam, adagrad
-            .l2(0.01) // 0.01
+            .l2(0.0013)
             .list()
             .layer(new DenseLayer.Builder().nIn(numInputs).nOut(numHidden)
                 .activation(Activation.RELU)
                 .build())
-            // .layer(new DenseLayer.Builder().nIn(numHidden).nOut(numHidden)
+            // .layer(new DenseLayer.Builder().nIn(numHidden).nOut(numHidden) // 6 hidden
             //     .build())
             .layer(new OutputLayer.Builder(LossFunctions.LossFunction.XENT) // XENT or MSE?
                 .activation(Activation.SIGMOID)
@@ -84,6 +79,7 @@ public class MatchWinPred {
             .build();
         
         MultiLayerNetwork model = new MultiLayerNetwork(conf);
+        // model = MultiLayerNetwork.load(new File(System.getProperty("user.home") + "/OneDrive/Documents/Vai/models/MatchWinPred/MatchWinPred.zip"), false);
         model.init();
 
         // StatsStorage statsStorage = new InMemoryStatsStorage();
@@ -101,36 +97,37 @@ public class MatchWinPred {
         double[] trainAccur = new double[numEpochs];
         double[] testAccur = new double[numEpochs];
 
-        log.info("Train model....");
-        for(int i = 0; i < numEpochs; i++) {
-            model.fit(trainData);
-            Evaluation trainEval = new Evaluation(threshold);
-            trainEval.eval(trainData.getLabels(), model.output(trainData.getFeatures()));
-            Evaluation testEval = new Evaluation(threshold);
-            testEval.eval(testData.getLabels(), model.output(testData.getFeatures()));
-            epochs[i] = i;
-            trainLoss[i] = model.score(trainData);
-            testLoss[i] = model.score(testData);
-            trainAccur[i] = trainEval.accuracy();
-            testAccur[i] = testEval.accuracy();
-            if(i % 100 == 0) {
-                log.info("Iteration: " + i + " =Score= Train: " + trainLoss[i] + " - Test: " + testLoss[i] +
-                    " =Accuracy= Train: " + trainAccur[i] + " - Test: " + testAccur[i]);
-                // System.out.println("Score - Train: " + model.score(trainData) + " - Test: " + model.score(testData));
+        if(train) {
+            log.info("Train model....");
+            for(int i = 0; i < numEpochs; i++) {
+                model.fit(trainData);
+                Evaluation trainEval = new Evaluation(threshold);
+                trainEval.eval(trainData.getLabels(), model.output(trainData.getFeatures()));
+                Evaluation testEval = new Evaluation(threshold);
+                testEval.eval(testData.getLabels(), model.output(testData.getFeatures()));
+                epochs[i] = i;
+                trainLoss[i] = model.score(trainData);
+                testLoss[i] = model.score(testData);
+                trainAccur[i] = trainEval.accuracy();
+                testAccur[i] = testEval.accuracy();
+                if(i % 100 == 0) {
+                    log.info("Iteration: " + i + " =Score= Train: " + trainLoss[i] + " - Test: " + testLoss[i] +
+                        " =Accuracy= Train: " + trainAccur[i] + " - Test: " + testAccur[i]);
+                    // System.out.println("Score - Train: " + model.score(trainData) + " - Test: " + model.score(testData));
+                }
             }
         }
-        // INDArray weights = model.getLayer(0).getParam("W");
-        // System.out.println(weights.length());
-        Map<String, INDArray> paramTable = model.paramTable();
-        INDArray weights = paramTable.get("0_W");
-        for(int feat = 0; feat < featPerPlay; feat++) {
-            double avgWeight = 0;
-            for(int numWeights = 0; numWeights < numHidden; numWeights++) {
-                avgWeight +=  weights.getDouble(feat + numWeights);
-            }
-            avgWeight /= numHidden;
-            System.out.println(feat + ": " + (avgWeight * 1000));
-        }
+
+        // Map<String, INDArray> paramTable = model.paramTable();
+        // INDArray weights = paramTable.get("0_W");
+        // for(int feat = 0; feat < featPerPlay; feat++) {
+        //     double avgWeight = 0;
+        //     for(int numWeights = 0; numWeights < numHidden; numWeights++) {
+        //         avgWeight +=  weights.getDouble(feat + numWeights);
+        //     }
+        //     avgWeight /= numHidden;
+        //     System.out.println(feat + ": " + (avgWeight * 1000));
+        // }
         
 
         XYChart lossChart = new XYChartBuilder()
