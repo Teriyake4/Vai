@@ -35,11 +35,13 @@ public class MatchWinPredIterator implements DataSetIterator {
         "radiant"};
     private ArrayList<String> matchCsv;
     private ArrayList<String> allPlayers;
+    private boolean byRounds;
 
-    public MatchWinPredIterator(File matchCsvP, int batch, int featPerPlay) throws IOException {
+    public MatchWinPredIterator(File matchCsvP, int batch, int featPerPlay, boolean byRounds) throws IOException {
         this.playerCsvPath = new File(VaiUtil.getTestDataPath(), "CSVPlayerIndex.csv");
         this.batch = batch;
         this.featPerPlay = featPerPlay;
+        this.byRounds = byRounds;
         csvCursor = 0;
         String line = "";
         matchCsvPath = matchCsvP;
@@ -58,20 +60,39 @@ public class MatchWinPredIterator implements DataSetIterator {
         for(int i = 0; i < num; i++) {
             StringTokenizer line = new StringTokenizer(matchCsv.get(csvCursor), ",");
             csvCursor++;
-            double outcome = Double.parseDouble(line.nextToken());
-            if(outcome == 1) { // defender win
-                def++;
-                labelList[i][0] = 1;
-                labelList[i][1] = 0;
-            }
-            else if(outcome == 0) { // attacker win
-                att++;
-                labelList[i][0] = 0;
-                labelList[i][1] = 1;
+            if(byRounds) {
+                line.nextToken(); // skip the first line
+                double defWin = Double.parseDouble(line.nextToken());
+                double attWin = Double.parseDouble(line.nextToken());
+                if(defWin > attWin)
+                    def++;
+                else if(attWin > defWin)
+                    att++;
+                else if(defWin == attWin) {
+                    System.out.println("TIE");
+                    continue;
+                }
+                labelList[i][0] = defWin;
+                labelList[i][1] = attWin;
             }
             else {
-                System.out.println("TIE");
-                continue;
+                double outcome = Double.parseDouble(line.nextToken());
+                if(outcome == 1) { // defender win
+                    def++;
+                    labelList[i][0] = 1;
+                    labelList[i][1] = 0;
+                }
+                else if(outcome == 0) { // attacker win
+                    att++;
+                    labelList[i][0] = 0;
+                    labelList[i][1] = 1;
+                }
+                else {
+                    System.out.println("TIE");
+                    continue;
+                }
+                for(int j = 0; j < 2; j++) // skip the rounds won
+                    line.nextToken();
             }
             for(int j = 0; j < (featPerPlay * 10); j++) {
                 featureList[i][j] = Double.parseDouble(line.nextToken());
