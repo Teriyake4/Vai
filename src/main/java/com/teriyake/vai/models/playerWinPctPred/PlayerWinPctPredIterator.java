@@ -37,8 +37,8 @@ public class PlayerWinPctPredIterator implements DataSetIterator{
     private String[] featureByMatch;
     private ArrayList<String> csv = new ArrayList<String>();
 
-    public PlayerWinPctPredIterator(int batch) throws IOException {
-        csvPath = new File(VaiUtil.getTestDataPath(), "CSVPlayerIndex.csv");
+    public PlayerWinPctPredIterator(File playerCSV, int batch) throws IOException {
+        csvPath = playerCSV;
         BufferedReader csvReader = new BufferedReader(new FileReader(csvPath));
         this.batch = batch;
         csvCursor = 0;
@@ -57,6 +57,7 @@ public class PlayerWinPctPredIterator implements DataSetIterator{
             csvLength++;
             csv.add(line);
         }
+        csvReader.close();
     }
     @Override
     public DataSet next(int num) {
