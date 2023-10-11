@@ -14,13 +14,14 @@ import com.teriyake.vai.VaiUtil;
 import com.teriyake.vai.data.GameValues;
 
 public class MatchDataToCSV {
-    final static String CSV = "MatchWinPredOther.csv";
+    final static String CSV = "MatchWinPredTest.csv";
     final static boolean BALANCE = false;
-    final static String MATCH_TYPE = "premier";
+    final static String MATCH_TYPE = "competitive";
     final static int NUM_FEATURES = 14 + GameValues.AGENT_LIST.length;
-    // number in inclusive
-    final static int MAX_NUM_IN = 11; // 11 to include all players
-    final static int MIN_NUM_IN = 7;
+    // number max non inclusive
+    final static int MAX_NUM_IN = 7; // 11 to include all players
+    // number min inclusive
+    final static int MIN_NUM_IN = 2;
     // 7 max, 2 min other
     // 11 max, 8 min train
 
