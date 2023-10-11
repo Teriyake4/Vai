@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import com.teriyake.stava.parser.PlayerParser;
 import com.teriyake.stava.stats.Player;
 import com.teriyake.vai.VaiUtil;
-// ONLY RUN WITH ONE DEVICE ie: ENVY
 public class PlayersToCSV {
     public static void main(String[] args) throws IOException {
         File csvPath = new File(VaiUtil.getTestDataPath(), "CSVPlayerIndex.csv");
@@ -36,8 +35,7 @@ public class PlayersToCSV {
                 if(inCSV)
                     continue;
                 try {
-                    String path = playerPath.getCanonicalPath();
-                    path = VaiUtil.changeToTeriy(path);
+                    String path = act + "\\" + player + "\\" + "player.json";
                     VaiUtil.addToCSVFile(csvPath, csv.size() + "," + path);
                 }
                 catch(IOException e) {

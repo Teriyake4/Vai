@@ -18,7 +18,7 @@ public class AllPlayersToCSV {
             String[] playerPaths = actPath.list();
             for(String player : playerPaths) { //player
                 total++;
-                File playerPath = new File(actPath, "/" + player + "/" + "player.json");
+                // File playerPath = new File(actPath, "/" + player + "/" + "player.json");
                 boolean inCSV = false;
                 ArrayList<String> csv = VaiUtil.readCSVFile(csvPath);
                 for(String line : csv) {
@@ -30,8 +30,7 @@ public class AllPlayersToCSV {
                 if(inCSV)
                     continue;
                 try {
-                    String path = playerPath.getCanonicalPath();
-                    path = VaiUtil.changeToTeriy(path);
+                    String path = act + "\\" + player + "\\" + "player.json";
                     VaiUtil.addToCSVFile(csvPath, csv.size() + "," + path);
                 }
                 catch(IOException e) {

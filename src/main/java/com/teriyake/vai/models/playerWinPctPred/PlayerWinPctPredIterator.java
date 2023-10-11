@@ -36,6 +36,7 @@ public class PlayerWinPctPredIterator implements DataSetIterator{
     private String[] toFeature;
     private String[] featureByMatch;
     private ArrayList<String> csv = new ArrayList<String>();
+    private String parent;
 
     public PlayerWinPctPredIterator(File playerCSV, int batch) throws IOException {
         csvPath = playerCSV;
@@ -52,6 +53,7 @@ public class PlayerWinPctPredIterator implements DataSetIterator{
         toLabel = labels;
         featureByMatch = byMatch;
         // toExclude = exclude;
+        parent = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/player/").getCanonicalPath();
         String line = "";
         while ((line = csvReader.readLine()) != null) {
             csvLength++;
@@ -67,15 +69,7 @@ public class PlayerWinPctPredIterator implements DataSetIterator{
             String line = csv.get(csvCursor);
             csvCursor++;
             int csvIndex = line.indexOf(",");
-            String dataPath = line.substring(csvIndex + 1);
-            // if(System.getProperty("user.home").contains("teriy")) {
-            //     int userIndex = dataPath.indexOf("Ian");
-            //     dataPath = dataPath.substring(0, userIndex) + "teriy" + dataPath.substring(userIndex + 3);
-            // }
-            if(System.getProperty("user.home").contains("Ian")) {
-                int userIndex = dataPath.indexOf("teriy");
-                dataPath = dataPath.substring(0, userIndex) + "Ian" + dataPath.substring(userIndex + 5);
-            }
+            String dataPath = parent + "\\" + line.substring(csvIndex + 1);
             File jsonPath = new File(dataPath);
             String json = VaiUtil.readFile(jsonPath);
             PlayerMode player = PlayerParser.parsedJsonToPlayer(json).getMode("competitive");

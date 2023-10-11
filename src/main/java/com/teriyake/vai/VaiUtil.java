@@ -78,14 +78,4 @@ public class VaiUtil {
         file = file.getCanonicalFile();
         return file;
     }
-
-    public static String changeToTeriy(String dataPath) {
-        if(System.getProperty("user.home").contains("teriy"))
-            return dataPath;
-        else if(dataPath.contains("C:\\Users\\Ian")) {
-            int userIndex = dataPath.indexOf("Ian");
-            dataPath = dataPath.substring(0, userIndex) + "teriy" + dataPath.substring(userIndex + 3);
-        }
-        return dataPath;
-    }
 }
