@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.sourceforge.tess4j.Tesseract;
@@ -25,15 +26,15 @@ public class Ocr {
         tesseract.setOcrEngineMode(1);
     }
 
-    public ArrayList<Map<String, String>> getPlayersAgentsFromImage(File imagePath) throws TesseractException {
+    public List<Map<String, String>> getPlayersAgentsFromImage(File imagePath) throws TesseractException {
         String text = tesseract.doOCR(imagePath);
         Map<String, String> team1 = new HashMap<String, String>();
         Map<String, String> team2 = new HashMap<String, String>();
-        ArrayList<Map<String, String>> output = new ArrayList<Map<String, String>>();
+        List<Map<String, String>> output = new ArrayList<Map<String, String>>();
         output.add(team1);
         output.add(team2);
         String[] lines = text.split("[\\r\\n]+");
-        for(int i = 2; i < lines.length  + 1; i += 2) {
+        for(int i = 2; i < lines.length + 1; i += 2) {
             if(i <= 10)
                 team1.put(lines[i - 2], lines[i - 1]);
             else
