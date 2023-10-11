@@ -136,7 +136,7 @@ public class CollectorClass {
     }
 
     private String[] getPlayersFromValidMatch(String playerMatch) throws HttpStatusException {
-        String[] matches = ret.getRecentMatches(playerMatch, "premier");
+        String[] matches = ret.getRecentMatches(playerMatch, "competitive");
         timeBuffer(true);
         ArrayList<String> players = new ArrayList<String>();
         for(String matchID : matches) {
