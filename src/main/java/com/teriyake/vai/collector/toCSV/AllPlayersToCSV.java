@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import com.teriyake.vai.VaiUtil;
 
 public class AllPlayersToCSV {
-    // RUN WITH ENVY
     public static void main(String[] args)  throws IOException {
         File csvPath = new File(VaiUtil.getTestDataPath(), "CSVAllPlayerIndex.csv");
         File dataPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/player");
