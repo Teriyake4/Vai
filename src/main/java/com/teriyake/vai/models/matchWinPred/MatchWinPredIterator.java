@@ -15,11 +15,10 @@ import org.nd4j.linalg.factory.Nd4j;
 import com.teriyake.vai.VaiUtil;
 
 public class MatchWinPredIterator implements DataSetIterator {
-    private static File playerCsvPath;
     private File matchCsvPath;
     private int csvCursor;
     private int csvLength;
-    private int batch;
+    private int batchSize;
     private int featPerPlay;
     private static final String[] rankToNum = {"unrated", 
         "iron 1", "iron 2", "iron 3", 
@@ -32,20 +31,15 @@ public class MatchWinPredIterator implements DataSetIterator {
         "immortal 1", "immortal 2", "immortal 3", 
         "radiant"};
     private ArrayList<String> matchCsv;
-    private ArrayList<String> allPlayers;
     private boolean byRounds;
 
-    public MatchWinPredIterator(File matchCsvP, int batch, int featPerPlay, boolean byRounds) throws IOException {
-        this.playerCsvPath = new File(VaiUtil.getTestDataPath(), "CSVPlayerIndex.csv");
-        this.batch = batch;
+    public MatchWinPredIterator(File matchCsvP, int batchSize, int featPerPlay, boolean byRounds) throws IOException {
+        this.batchSize = VaiUtil.readCSVFile(matchCsvP).size();
         this.featPerPlay = featPerPlay;
         this.byRounds = byRounds;
         csvCursor = 0;
-        String line = "";
         matchCsvPath = matchCsvP;
-        // BufferedReader csvReader = new BufferedReader(new FileReader(matchCsvPath));
         matchCsv = VaiUtil.readCSVFile(matchCsvPath);
-        allPlayers = VaiUtil.readCSVFile(new File(VaiUtil.getTestDataPath(), "CSVAllPlayerIndex.csv"));
     }
 
     @Override
@@ -136,7 +130,9 @@ public class MatchWinPredIterator implements DataSetIterator {
     }
 
     private boolean checkToSkip(int c) {
-        int[] statsToSkip = {0, 1, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22 , 23, 24 , 25, 26 , 27, 28 , 29, 30 , 31, 32 , 33, 34 , 35 , 36};
+        int[] statsToSkip = {0, 1, 13, 14};
+        if(c > 14)
+            return true;
         for(int num : statsToSkip) {
             if(c == num) // features to skip
                 return true;
@@ -146,7 +142,7 @@ public class MatchWinPredIterator implements DataSetIterator {
 
     @Override
     public DataSet next() {
-        return next(batch);
+        return next(batchSize);
     }
     
     @Override
@@ -177,7 +173,7 @@ public class MatchWinPredIterator implements DataSetIterator {
     
     @Override
     public int batch() {
-        return batch;
+        return batchSize;
     }
     
     @Override
