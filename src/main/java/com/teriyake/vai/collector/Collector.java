@@ -10,11 +10,11 @@ import com.teriyake.stava.Store;
 
 public class Collector {
     // 티  个ＲЦＣＫ囗
-    // sbananas#1766
     public static void main(String[] args) throws HttpStatusException {
         Scanner input = new Scanner(System.in);
         int numToRet = setNumToRet(input);
         String start = setPlayerToRet(input);
+        int maxWait = setSpeed(input);
 
         System.out.println("Loading...");
         Retriever retriever = new Retriever();
@@ -31,7 +31,7 @@ public class Collector {
         input.close();
 
         try {
-            CollectorClass collector = new CollectorClass(retriever, numToRet, file, start);
+            CollectorClass collector = new CollectorClass(retriever, numToRet, file, start, maxWait);
             collector.collect();
         }
         catch (IOException e) {
@@ -63,5 +63,25 @@ public class Collector {
         String user = "";
         user = input.nextLine();      
         return user;
+    }
+
+    public static int setSpeed(Scanner input) {
+        System.out.print("Set retrieval speed 1-2, 1 (Slow)-Default: ");
+        String user = input.nextLine();        
+        int num = 1;
+        try {
+            num = Integer.parseInt(user);
+        }
+        catch(NumberFormatException e) {
+        }
+        if(num == 1) {
+            System.out.println("Slow Retrieval");
+            num = 218;
+        }
+        else {
+            System.out.println("Fast Retrieval");
+            num = 18;
+        }
+        return num;
     }
 }
