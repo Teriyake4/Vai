@@ -16,6 +16,7 @@ public class MatchToCSV {
     static boolean add = true;
     static boolean balanced = true;
     public static void main(String[] args) throws IOException {
+        PlayerParser parser = new PlayerParser();
         int def = 0;
         int att = 0;
         File csvPath = new File(VaiUtil.getTestDataPath(), "CSVMatchIndex.csv");
@@ -76,10 +77,11 @@ public class MatchToCSV {
                             String jsonPlayerData = VaiUtil.readFile(playerListAndPath.get(p).getCanonicalFile());
                             // System.out.println(playerListAndPath.get(p));
                             Player playerStats = null;
+                            parser.setJsonString(jsonPlayerData);
                             if(jsonPlayerData.contains("\"schema\": \"statsv2\"")) // unparsed json
-                                playerStats = PlayerParser.getPlayer(jsonPlayerData);
+                                playerStats = parser.getPlayer();
                             else
-                                playerStats = PlayerParser.parsedJsonToPlayer(jsonPlayerData);
+                                playerStats = parser.parsedJsonToPlayer();
                             if(playerStats == null || !(playerStats.containsMode("competitive") || playerStats.containsMode("premier"))) {
                                 exists = false;
                                 // System.out.println(p + " " + playerStats.containsMode("competitive") + " " + playerStats.containsMode("premier"));

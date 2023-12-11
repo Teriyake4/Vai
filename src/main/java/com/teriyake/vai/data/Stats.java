@@ -12,6 +12,7 @@ import com.teriyake.vai.VaiUtil;
 
 public class Stats {
     public static void main(String[] args) {
+        PlayerParser parser = new PlayerParser();
         ArrayList<String> allPlayers = VaiUtil.readCSVFile(new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/CSVAllPlayerIndex.csv"));
         int matchNum = 0;
         int defWin = 0;
@@ -94,10 +95,11 @@ public class Stats {
                 }
                 String json = VaiUtil.readFile(playerPath);
                 Player playerStats = null;
+                parser.setJsonString(json);
                 if(json.contains("\"schema\": \"statsv2\"")) // unparsed json
-                    playerStats = PlayerParser.getPlayer(json);
+                    playerStats = parser.getPlayer();
                 else
-                    playerStats = PlayerParser.parsedJsonToPlayer(json);
+                    playerStats = parser.parsedJsonToPlayer();
                     
                 boolean contains = playerStats.containsMode("competitive");
                 // boolean contains = playerStats.containsMap(map);
