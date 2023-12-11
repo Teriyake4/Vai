@@ -3,8 +3,15 @@ package com.teriyake.vai.collector.toCSV;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import org.threadly.concurrent.collections.ConcurrentArrayList;
 
 import com.teriyake.stava.parser.MatchParser;
 import com.teriyake.stava.parser.PlayerParser;
@@ -14,90 +21,118 @@ import com.teriyake.vai.VaiUtil;
 import com.teriyake.vai.data.GameValues;
 
 public class MatchDataToCSV {
-    final static String CSV = "MatchWinPredTest.csv";
-    final static boolean BALANCE = false;
+    final static String CSV = "MatchWinPredTrain.csv";
+    final static boolean BALANCE = true;
     final static String MATCH_TYPE = "competitive";
     final static int NUM_FEATURES = 14 + GameValues.AGENT_LIST.length;
-    // number max non inclusive
-    final static int MAX_NUM_IN = 7; // 11 to include all players
+    // number max inclusive
+    final static int MAX_NUM_IN = 10; // 10 to include all players
     // number min inclusive
-    final static int MIN_NUM_IN = 2;
-    // 7 max, 2 min other
-    // 11 max, 8 min train
+    final static int MIN_NUM_IN = 7;
+    // 10 max, 7 min train
+    // 6 max, 2 min test
+    // 5 max, 1 min other
+
 
     static Map<String, File> playerListAndPath;
     static File csvPath;
+    static List<String> fileData;
+
+    static int def = 0;
+    static int att = 0;
+    static int i = 0;
     public static void main(String[] args) throws IOException {
-        int def = 0;
-        int att = 0;
+        fileData = new ConcurrentArrayList<String>();
         csvPath = new File(VaiUtil.getTestDataPath(), CSV);
         VaiUtil.clearFile(csvPath);
         File dataPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/match");
-        String[] subPaths = dataPath.list();
+        List<String> subPaths = Arrays.asList(dataPath.list());
         addPlayerListPath();
         ArrayList<String> attemptedMatches = new ArrayList<String>();
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         for(String act : subPaths) {
-            File actPath = new File(dataPath, "/" + act);
-            String[] matchPaths = actPath.list();
-            for(String match : matchPaths) { // match
-                System.out.println(match);
-                double[] statsSingleLine = new double[(NUM_FEATURES * 10) + 3];
-                // first value is defense win (1) or loss (0), second and third are rounds won def wins, att wins respectivley
-                if(attemptedMatches.contains(match))
-                    continue;
-                else
-                    attemptedMatches.add(match);
-                String matchJson = VaiUtil.readFile(new File(actPath, "/" + match + "/" + "match.json"));
-                String result = MatchParser.getWinningTeam(matchJson);
-                if(!MatchParser.getMode(matchJson).equals(MATCH_TYPE))
-                    continue;
-                if(result.equals("defender")) {
-                    def++;
-                    statsSingleLine[0] = 1;
-                }
-                else if(result.equals("attacker")) {
-                    att++;
-                    statsSingleLine[0] = 0;
-                }
-                else if(result.equals("tie"))
-                    continue;
-                statsSingleLine[1] = MatchParser.getDefRoundsWon(matchJson);
-                statsSingleLine[2] = MatchParser.getAttRoundsWon(matchJson);
-                int dataIndex = 3;
-                Map<String, ArrayList<String>> playersFromMatch = MatchParser.getTeams(matchJson);
-                String[] order = {"defender", "attacker"}; // to make sure players are in proper order
-                int numPlayers = 0;
-                for(int ord = 0; ord < order.length; ord++) {
-                    for(String player : playersFromMatch.get(order[ord])) {
-                        System.out.print(player + " ");
-                        double[] singlePlayerData = getPlayerData(player, MatchParser.getAgentOfPlayer(matchJson, player), order[ord]);
-                        dataIndex = addPlayerStatsToLine(statsSingleLine, singlePlayerData, dataIndex);
-                        if(singlePlayerData[1] == 1)
-                            numPlayers++;
+            executor.submit(() -> {
+                PlayerParser parser = new PlayerParser();
+            // subPaths.parallelStream().forEach(act -> {
+                File actPath = new File(dataPath, "/" + act);
+                String[] matchPaths = actPath.list();
+                for(String match : matchPaths) { // match
+                    double[] statsSingleLine = new double[(NUM_FEATURES * 10) + 3];
+                    // first value is defense win (1) or loss (0), second and third are rounds won def wins, att wins respectivley
+                    if(attemptedMatches.contains(match))
+                        continue;
+                    else
+                        attemptedMatches.add(match);
+                    String matchJson = VaiUtil.readFile(new File(actPath, "/" + match + "/" + "match.json"));
+                    String result = MatchParser.getWinningTeam(matchJson);
+                    if(!MatchParser.getMode(matchJson).equals(MATCH_TYPE))
+                        continue;
+                    if(result.equals("defender")) {
+                        def++;
+                        statsSingleLine[0] = 1;
                     }
+                    else if(result.equals("attacker")) {
+                        att++;
+                        statsSingleLine[0] = 0;
+                    }
+                    else if(result.equals("tie"))
+                        continue;
+                    statsSingleLine[1] = MatchParser.getDefRoundsWon(matchJson);
+                    statsSingleLine[2] = MatchParser.getAttRoundsWon(matchJson);
+                    int dataIndex = 3;
+                    Map<String, ArrayList<String>> playersFromMatch = MatchParser.getTeams(matchJson);
+                    String[] order = {"defender", "attacker"}; // to make sure players are in proper order
+                    int numPlayers = 0;
+                    for(int ord = 0; ord < order.length; ord++) {
+                        for(String player : playersFromMatch.get(order[ord])) {
+                            // System.out.print(player + " ");
+                            double[] singlePlayerData = getPlayerData(parser, player, MatchParser.getAgentOfPlayer(matchJson, player), order[ord]);
+                            dataIndex = addPlayerStatsToLine(statsSingleLine, singlePlayerData, dataIndex);
+                            if(singlePlayerData[1] == 1)
+                                numPlayers++;
+                        }
+                    }
+                    String toWrite = "";
+                    if(numPlayers < MIN_NUM_IN || numPlayers > MAX_NUM_IN)
+                        continue;
+                    // System.out.println(numPlayers);
+                    for(int i = 0; i < statsSingleLine.length; i++) {
+                        toWrite += statsSingleLine[i] + ",";
+                    }
+                    toWrite = toWrite.substring(0, toWrite.length() - 1);
+                    fileData.add(toWrite);
+                    i++;
+                    System.out.println(i + ": " + match);
                 }
-                System.out.println();
-                String toWrite = "";
-                if(numPlayers < MIN_NUM_IN || numPlayers > MAX_NUM_IN)
-                    continue;
-                System.out.println(numPlayers);
-                for(int i = 0; i < statsSingleLine.length; i++) {
-                    toWrite += statsSingleLine[i] + ",";
-                }
-                toWrite = toWrite.substring(0, toWrite.length() - 1);
-                VaiUtil.addToCSVFile(csvPath, toWrite);
+            });
+        }
+        executor.shutdown();
+        try {
+            if(!executor.awaitTermination(2000, TimeUnit.MILLISECONDS))
+                executor.shutdownNow();
+        }
+        catch(InterruptedException e) {
+            executor.shutdownNow();
+        }
+        while(!executor.isTerminated()) {
+            try {
+                Thread.sleep(1000);
+            }
+            catch(InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
+        for(String data : fileData)
+            VaiUtil.addToCSVFile(csvPath, data);
         if(BALANCE)
             balance();
-        System.out.println("defP: " + def + " attP: " + att);
     }
 
     public static void addPlayerListPath() {
         System.out.println("Indexing Players...");
         File playerPath = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/player/");
         String[] playerActPaths = getSortedFolders(playerPath);
-        playerListAndPath = new HashMap<String, File>();
+        playerListAndPath = new ConcurrentHashMap<String, File>();
         for(int i = playerActPaths.length - 1; i >= 0; i--) {
             File actPath = new File(playerPath, "\\" + playerActPaths[i]);
             String[] playerPaths = actPath.list();
@@ -140,15 +175,21 @@ public class MatchDataToCSV {
         System.out.println("Done Balancing");
     }
 
-    public static double[] getPlayerData(String name, String agent, String team) {
+    public static double[] getPlayerData(PlayerParser parser, String name, String agent, String team) {
         if(!playerListAndPath.containsKey(name))
             return emptyPlayerData(team, agent);
         String playerJson = VaiUtil.readFile(playerListAndPath.get(name));
         Player playerData = null;
-        if(playerJson.contains("\"schema\": \"statsv2\"")) // unparsed json
-            playerData = PlayerParser.getPlayer(playerJson);
+        try {
+            parser.setJsonString(playerJson);
+        }
+        catch(NullPointerException e) {
+            return emptyPlayerData(team, agent);
+        }
+        if(playerJson.contains("\"schema\": \"statsv2\""))// unparsed json
+            playerData = parser.getPlayer();
         else
-            playerData = PlayerParser.parsedJsonToPlayer(playerJson);
+            playerData = parser.parsedJsonToPlayer();
         if(playerData == null || !playerData.containsMode(MATCH_TYPE))
             return emptyPlayerData(team, agent);
         double[] playerFeatures = new double[NUM_FEATURES];
