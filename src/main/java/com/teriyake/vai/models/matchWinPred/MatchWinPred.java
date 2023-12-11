@@ -2,12 +2,17 @@ package com.teriyake.vai.models.matchWinPred;
 
 import java.io.File;
 
+import org.deeplearning4j.core.storage.StatsStorage;
+import org.deeplearning4j.exception.DL4JException;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
+import org.deeplearning4j.ui.api.UIServer;
+import org.deeplearning4j.ui.model.stats.StatsListener;
+import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
 import org.deeplearning4j.util.ModelSerializer;
 import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
@@ -22,42 +27,45 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.SplitTestAndTrain;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+import org.nd4j.linalg.learning.config.AdaGrad;
 import org.nd4j.linalg.learning.config.Adam;
+import org.nd4j.linalg.learning.config.Sgd;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.teriyake.vai.VaiUtil;
+import com.teriyake.vai.data.GameValues;
 
 public class MatchWinPred {
     private static Logger log = LoggerFactory.getLogger(MatchWinPred.class);
-    private static boolean showInDepth = true;
+    private static boolean showInDepth = false;
     private static boolean save = false;
     private static boolean train = true;
     public static void main(String[] args) throws Exception {
-        int featPerPlay = 14 + 22;
+        int featPerPlay = 14 + GameValues.AGENT_LIST.length;
         int batchSize = 56;
         int seed = 1;
         double learningRate = 0.0014; // 0.001 @ 49
         int numInputs = 10 * featPerPlay;
         int numOutputs = 2;
         int numHidden = 13; // 10
-        int numEpochs = 2000; // 100
+        int numEpochs = 10000; // 100
         double threshold = 0.50;
 
         File trainingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTrain.csv");
-        DataSetIterator trainingIterator = new MatchWinPredIterator(trainingData, VaiUtil.readCSVFile(trainingData).size(), featPerPlay, false);
+        DataSetIterator trainingIterator = new MatchWinPredIterator(trainingData, batchSize, featPerPlay, false);
         DataSet trainData = trainingIterator.next();
         trainData.shuffle(seed);
 
-        // File testingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTest.csv");
-        // DataSetIterator testIterator = new MatchWinPredIterator(testingData, VaiUtil.readCSVFile(testingData).size(), featPerPlay, false);
-        // DataSet testData = testIterator.next();
-        // testData.shuffle(seed);
+        File testingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTest.csv");
+        DataSetIterator testIterator = new MatchWinPredIterator(testingData, batchSize, featPerPlay, false);
+        DataSet testData = testIterator.next();
+        testData.shuffle(seed);
 
-        SplitTestAndTrain testAndTrain = trainData.splitTestAndTrain(0.85); // 0.78
-        trainData = testAndTrain.getTrain();
-        DataSet testData = testAndTrain.getTest();
+        // SplitTestAndTrain testAndTrain = trainData.splitTestAndTrain(0.78); // 0.78
+        // trainData = testAndTrain.getTrain();
+        // DataSet testData = testAndTrain.getTest();
 
         log.info("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
@@ -82,14 +90,14 @@ public class MatchWinPred {
         // model = MultiLayerNetwork.load(new File(System.getProperty("user.home") + "/OneDrive/Documents/Vai/models/MatchWinPred/MatchWinPred.zip"), false);
         model.init();
 
-        // StatsStorage statsStorage = new InMemoryStatsStorage();
-        // try {
-        //     UIServer uiServer = UIServer.getInstance();
-        //     uiServer.attach(statsStorage);
-        //     model.setListeners(new StatsListener(statsStorage, 1));
-        // }
-        // catch(DL4JException e) {
-        // }
+        try {
+            StatsStorage statsStorage = new InMemoryStatsStorage();
+            UIServer uiServer = UIServer.getInstance();
+            uiServer.attach(statsStorage);
+            model.setListeners(new StatsListener(statsStorage, 1));
+        }
+        catch(DL4JException e) {
+        }
 
         double[] epochs = new double[numEpochs];
         double[] trainLoss = new double[numEpochs];
