@@ -37,6 +37,7 @@ public class PlayerWinPctPredIterator implements DataSetIterator{
     private String[] featureByMatch;
     private ArrayList<String> csv = new ArrayList<String>();
     private String parent;
+    private PlayerParser parser;
 
     public PlayerWinPctPredIterator(File playerCSV, int batch) throws IOException {
         csvPath = playerCSV;
@@ -54,6 +55,7 @@ public class PlayerWinPctPredIterator implements DataSetIterator{
         featureByMatch = byMatch;
         // toExclude = exclude;
         parent = new File(System.getProperty("user.home") + "/OneDrive/Documents/StaVa/data/player/").getCanonicalPath();
+        parser = new PlayerParser();
         String line = "";
         while ((line = csvReader.readLine()) != null) {
             csvLength++;
@@ -72,7 +74,8 @@ public class PlayerWinPctPredIterator implements DataSetIterator{
             String dataPath = parent + "\\" + line.substring(csvIndex + 1);
             File jsonPath = new File(dataPath);
             String json = VaiUtil.readFile(jsonPath);
-            PlayerMode player = PlayerParser.parsedJsonToPlayer(json).getMode("competitive");
+            parser.setJsonString(json);
+            PlayerMode player = parser.parsedJsonToPlayer().getMode("competitive");
             labelList[i][0] = player.getMatchesWinPct() / 100;
             featureList[i][0] = player.getKAST() / 100;
             featureList[i][1] = player.getScorePerRound();// / 1000; MAX: 1500
