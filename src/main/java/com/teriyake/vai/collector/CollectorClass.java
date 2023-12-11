@@ -18,17 +18,19 @@ public class CollectorClass {
     private int numToRet;
     private File vaiPath; // filepath of list of players already retrieved
     private File stavaPath;
+    private int wait;
     // private File retPath;
     private ArrayList<String> toRet;
     private ArrayList<String> matchesCollected;
     private ArrayList<String> playersCollected;
     // private ArrayList<String> attempted;
 
-    public CollectorClass(Retriever retriever, int numRet, File path, String start) throws FileNotFoundException, IOException {
+    public CollectorClass(Retriever retriever, int numRet, File path, String start, int maxWait) throws FileNotFoundException, IOException {
         ret = retriever;
         numToRet = numRet;
         vaiPath = new File(path, "Vai/");
         stavaPath = new File(path, "StaVa/data/");
+        wait = maxWait;
         toRet = new ArrayList<String>();
         matchesCollected = new ArrayList<String>();
         playersCollected = new ArrayList<String>();
@@ -47,7 +49,17 @@ public class CollectorClass {
         for(int i = 0; i < toRet.size(); i++) {
             // System.out.println("i: " + i + 1 + " toRet: " + toRet.size() + " numRet: " + numRet + " numToRet: " + numToRet);
             if(i + 1 >= toRet.size() && numRet < numToRet) {
-                addToRet();
+                try {
+                    addToRet();
+                }
+                catch(HttpStatusException e) {
+                    int statusCode = e.getStatusCode();
+                    if(statusCode == 429 || statusCode == 403) {
+                        System.out.println("Terminating collection because of HTTP error: " + statusCode);
+                        i = toRet.size();
+                        continue;
+                    }
+                }
                 numRet++;
             }
             timeBuffer(isPrivate);
@@ -59,9 +71,15 @@ public class CollectorClass {
                 attempted++;
             }
             catch(HttpStatusException e) {
-                if(e.getStatusCode() == 451) {
+                int statusCode = e.getStatusCode();
+                if(statusCode == 451) {
                     System.out.println(player + " is private");
                     isPrivate = true;
+                }
+                if(statusCode == 429 || statusCode == 403) {
+                    System.out.println("Terminating collection because of HTTP error: " + statusCode);
+                    i = toRet.size();
+                    continue;
                 }
                 else
                     e.printStackTrace();
@@ -77,7 +95,7 @@ public class CollectorClass {
         }
     }
 
-    private void addToRet() throws FileNotFoundException, IOException {
+    private void addToRet() throws FileNotFoundException, IOException, HttpStatusException {
         int initSize = toRet.size();
         for(int i = toRet.size(); i > 0; i--) {
             timeBuffer(false);
@@ -88,8 +106,12 @@ public class CollectorClass {
                 toAdd = getPlayersFromValidMatch(toRet.get(initSize - i));
             }
             catch(HttpStatusException e) {
-                if(e.getStatusCode() == 451)
+                int statusCode = e.getStatusCode();
+                if(statusCode == 451)
                     continue;
+                else if(statusCode == 429 || statusCode == 403) {
+                    throw e;
+                }
                 else
                     e.printStackTrace();
             }
@@ -201,23 +223,23 @@ public class CollectorClass {
         }
     }
 
-    private boolean isInTxt(String player) throws FileNotFoundException, IOException {
-        String output = "";
-        File file = new File(vaiPath, "/collection/HasRet.txt");
-        output = VaiUtil.readFile(file);
-        if(output.contains(player))
-            return true;
-        file = new File(vaiPath, "/collection/Private.txt");
-        output = VaiUtil.readFile(file);
-        return output.contains(player);
-    }
+    // private boolean isInTxt(String player) throws FileNotFoundException, IOException {
+    //     String output = "";
+    //     File file = new File(vaiPath, "/collection/HasRet.txt");
+    //     output = VaiUtil.readFile(file);
+    //     if(output.contains(player))
+    //         return true;
+    //     file = new File(vaiPath, "/collection/Private.txt");
+    //     output = VaiUtil.readFile(file);
+    //     return output.contains(player);
+    // }
 
-    private void timeBuffer(boolean isPrivate) {
+    private void timeBuffer(boolean fast) {
         int smallTime = 5;
-        if(isPrivate)
+        if(fast)
             smallTime = (int) (Math.random() * 5) + 1;
         else
-            smallTime = (int) (Math.random() * 118) + 3; // 118
+            smallTime = (int) (Math.random() * wait) + 3; // 118
         System.out.println("Waiting " + smallTime + " sec");
         smallTime *= 1000;
         try {
