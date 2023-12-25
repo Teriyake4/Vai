@@ -76,7 +76,7 @@ public class CollectorClass {
                     System.out.println(player + " is private");
                     isPrivate = true;
                 }
-                if(statusCode == 429 || statusCode == 403) {
+                else if(statusCode == 429 || statusCode == 403) {
                     System.out.println("Terminating collection because of HTTP error: " + statusCode);
                     i = toRet.size();
                     continue;
