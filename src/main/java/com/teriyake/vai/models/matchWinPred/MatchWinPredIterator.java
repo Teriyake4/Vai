@@ -114,7 +114,7 @@ public class MatchWinPredIterator implements DataSetIterator {
                         min = dataSet[r][col];
                 }
             }
-            if(c == 2 || c == 3 || c == 4) {
+            if(c == 2 || c == 3) {
                 max = 100;
                 min = 0;
             }
@@ -130,8 +130,8 @@ public class MatchWinPredIterator implements DataSetIterator {
     }
 
     private boolean checkToSkip(int c) {
-        int[] statsToSkip = {0, 1, 13, 14};
-        if(c > 14)
+        int[] statsToSkip = {0, 1};
+        if(c > 13)
             return true;
         for(int num : statsToSkip) {
             if(c == num) // features to skip
