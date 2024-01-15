@@ -21,15 +21,15 @@ import com.teriyake.vai.VaiUtil;
 import com.teriyake.vai.data.GameValues;
 
 public class MatchDataToCSV {
-    final static String CSV = "MatchWinPredTrain.csv";
+    final static String CSV = "MatchWinPredTest.csv";
     final static boolean BALANCE = true;
     final static String MATCH_TYPE = "competitive";
     final static int NUM_FEATURES = 14 + GameValues.AGENT_LIST.length;
     // number max inclusive
-    final static int MAX_NUM_IN = 10; // 10 to include all players
+    final static int MAX_NUM_IN = 6; // 10 to include all players
     // number min inclusive
-    final static int MIN_NUM_IN = 7;
-    // 10 max, 7 min train
+    final static int MIN_NUM_IN = 2;
+    // 10 max, 7 min train balance
     // 6 max, 2 min test
     // 5 max, 1 min other
 
@@ -204,16 +204,31 @@ public class MatchDataToCSV {
         playerFeatures[1] = 1; // exists
         playerFeatures[2] = modeData.getMatchesWinPct();
         playerFeatures[3] = modeData.getRoundsWinPct();
-        playerFeatures[4] = modeData.getKAST();
-        playerFeatures[5] = modeData.getAssistsPerMatch();
-        playerFeatures[6] = modeData.getKillsPerMatch();
-        playerFeatures[7] = modeData.getDeathsPerMatch();
-        playerFeatures[8] = modeData.getKDRatio();
-        playerFeatures[9] = modeData.getScorePerRound();
-        playerFeatures[10] = modeData.getDamagePerRound();
-        playerFeatures[11] = modeData.getDefusesPerMatch();
-        playerFeatures[12] = modeData.getPlantsPerMatch();
-        playerFeatures[13] = modeData.getFirstBloodsPerMatch();
+        playerFeatures[4] = modeData.getDeathsPerMatch();
+        playerFeatures[5] = modeData.getKDRatio();
+
+        playerFeatures[6] = modeData.getAttackTraded()/modeData.getAttackRoundsPlayed();
+        playerFeatures[7] = modeData.getDefenseTraded()/modeData.getDefenseRoundsPlayed();
+        playerFeatures[8] = modeData.getTraded()/modeData.getRoundsPlayed();
+        playerFeatures[9] = modeData.getDamageDelta();
+        playerFeatures[10] = modeData.getDamagePerMatch();
+        playerFeatures[11] = modeData.getDamageReceived()/modeData.getMatchesPlayed();
+        playerFeatures[12] = modeData.getEconRatingPerMatch();
+        playerFeatures[13] = modeData.getKDARatio();
+
+        for(int i = 0; i < playerFeatures.length; i++) {
+            if(Double.isInfinite(playerFeatures[i]) || Double.isNaN(playerFeatures[i]))
+                playerFeatures[i] = 0;
+        }
+
+        // playerFeatures[6] = modeData.getKillsPerMatch();
+        // playerFeatures[7] = modeData.getKAST();
+        // playerFeatures[8] = modeData.getAssistsPerMatch();
+        // playerFeatures[9] = modeData.getScorePerRound();
+        // playerFeatures[10] = modeData.getDamagePerRound();
+        // playerFeatures[11] = modeData.getDefusesPerMatch();
+        // playerFeatures[12] = modeData.getPlantsPerMatch();
+        // playerFeatures[13] = modeData.getFirstBloodsPerMatch();
 
         playerFeatures = setAgent(playerFeatures, agent);
 
