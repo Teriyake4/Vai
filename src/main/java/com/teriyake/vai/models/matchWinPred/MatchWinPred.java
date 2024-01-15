@@ -46,11 +46,11 @@ public class MatchWinPred {
         int featPerPlay = 14 + GameValues.AGENT_LIST.length;
         int batchSize = 56;
         int seed = 1;
-        double learningRate = 0.0014; // 0.001 @ 49
+        double learningRate = 0.006; // 0.0014
         int numInputs = 10 * featPerPlay;
         int numOutputs = 2;
-        int numHidden = 13; // 10
-        int numEpochs = 10000; // 100
+        int numHidden = 6; // 10
+        int numEpochs = 1285; // 100
         double threshold = 0.50;
 
         File trainingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTrain.csv");
@@ -72,14 +72,14 @@ public class MatchWinPred {
             .seed(seed)
             .activation(Activation.RELU) // SOFTMAX/SIGMOID, lower epochs for softmax?
             .weightInit(WeightInit.XAVIER)
-            .updater(new Adam(learningRate)) // Adam, adagrad
+            .updater(new AdaGrad(learningRate)) // Adam, adagrad
             .l2(0.0013)
             .list()
             .layer(new DenseLayer.Builder().nIn(numInputs).nOut(numHidden)
                 .activation(Activation.RELU)
                 .build())
-            // .layer(new DenseLayer.Builder().nIn(numHidden).nOut(numHidden) // 6 hidden
-            //     .build())
+            .layer(new DenseLayer.Builder().nIn(numHidden).nOut(numHidden) // 6 hidden
+                .build())
             .layer(new OutputLayer.Builder(LossFunctions.LossFunction.XENT) // XENT or MSE?
                 .activation(Activation.SIGMOID)
                 .nIn(numHidden).nOut(numOutputs)
