@@ -84,7 +84,7 @@ public class CollectorClass {
                 else
                     e.printStackTrace();
             }
-            catch(NullPointerException e) {
+            catch(NullPointerException e) { // when there is no data, usually at the start of an act
                 System.out.println(player + " is invalid");
             }
             addToTxt(player, isPrivate);
