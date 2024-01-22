@@ -21,14 +21,14 @@ import com.teriyake.vai.VaiUtil;
 import com.teriyake.vai.data.GameValues;
 
 public class MatchDataToCSV {
-    final static String CSV = "MatchWinPredTest.csv";
+    final static String CSV = "MatchWinPredTrain.csv";
     final static boolean BALANCE = true;
     final static String MATCH_TYPE = "competitive";
-    final static int NUM_FEATURES = 14 + GameValues.AGENT_LIST.length;
+    final static int NUM_FEATURES = 16 + GameValues.AGENT_LIST.length;
     // number max inclusive
-    final static int MAX_NUM_IN = 6; // 10 to include all players
+    final static int MAX_NUM_IN = 10; // 10 to include all players
     // number min inclusive
-    final static int MIN_NUM_IN = 2;
+    final static int MIN_NUM_IN = 7;
     // 10 max, 7 min train balance
     // 6 max, 2 min test
     // 5 max, 1 min other
@@ -215,6 +215,14 @@ public class MatchDataToCSV {
         playerFeatures[11] = modeData.getDamageReceived()/modeData.getMatchesPlayed();
         playerFeatures[12] = modeData.getEconRatingPerMatch();
         playerFeatures[13] = modeData.getKDARatio();
+        String rank = modeData.getRank();
+        String peak = modeData.getPeakRank();
+        for(int i = 0; i < GameValues.RANK_LIST.length; i++) {
+            if(GameValues.RANK_LIST[i].equals(rank))
+                playerFeatures[14] = i;
+            if(GameValues.RANK_LIST[i].equals(peak))
+                playerFeatures[15] = i;
+        }
 
         for(int i = 0; i < playerFeatures.length; i++) {
             if(Double.isInfinite(playerFeatures[i]) || Double.isNaN(playerFeatures[i]))
@@ -257,10 +265,10 @@ public class MatchDataToCSV {
             if(agent.equals(GameValues.AGENT_LIST[i]))
                 agentIndex = i;
         }
-        for(int i = 14; i < NUM_FEATURES; i++) {
+        for(int i = NUM_FEATURES - GameValues.AGENT_LIST.length; i < NUM_FEATURES; i++) {
             data[i] = 0;
         }
-        data[14 + agentIndex] = 1;
+        data[NUM_FEATURES - GameValues.AGENT_LIST.length + agentIndex] = 1;
         return data;
     }
 
