@@ -27,7 +27,7 @@ public class MatchToSingleCSV {
         VaiUtil.clearFile(finalCSVPath);
         List<String> initFile = VaiUtil.readCSVFile(initCSVPath);
         List<String> formated = new ArrayList<String>();
-        formated.add("Outcome,NumDef,NumAtt,MatchWin%,RoundWin%,Deaths,KDRatio,AttackTraded,DefenseTraded,Traded,DamageDelta,DamagePerMatch,DamageReceivedPerMatch,EconPerMatch,KDA");
+        formated.add("Outcome,NumDef,NumAtt,MatchWin%,RoundWin%,Deaths,KDRatio,AttackTraded,DefenseTraded,Traded,DamageDelta,DamagePerMatch,DamageReceivedPerMatch,EconPerMatch,KDA,Rank,Peak");
         for(int i = 0; i < initFile.size(); i++) { // iterates over each line (each match)
             // 2 previous values used for player team and existence allocated to number of players that exist per side
             int numDef = 0;
