@@ -39,9 +39,9 @@ public class MatchToSingleCSV {
             if(outcomeAsName) { // outcome of match
                 double outcome = Double.parseDouble(initLine.nextToken());
                 if(outcome == 0) // attacker
-                    line.append("attacker");
+                    line.append("0");
                 else if(outcome == 1) // defender
-                    line.append("defender");
+                    line.append("1");
             }
             else {
                 line.append(Double.parseDouble(initLine.nextToken()));

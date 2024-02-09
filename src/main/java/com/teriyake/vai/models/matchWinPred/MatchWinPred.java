@@ -1,6 +1,7 @@
 package com.teriyake.vai.models.matchWinPred;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.deeplearning4j.core.storage.StatsStorage;
 import org.deeplearning4j.exception.DL4JException;
@@ -42,16 +43,17 @@ public class MatchWinPred {
     private static boolean showInDepth = false;
     private static boolean save = false;
     private static boolean train = true;
+
+    private static int featPerPlay = 16 + GameValues.AGENT_LIST.length;
+    private static int batchSize = 56;
+    private static int seed = 1;
+    private static double learningRate = 0.0013; // 0.0014
+    private static int numInputs = 10 * featPerPlay;
+    private static int numOutputs = 2;
+    private static int numHidden = 22; // 10
+    private static int numEpochs = 2000; // 830
+    private static double threshold = 0.50;
     public static void main(String[] args) throws Exception {
-        int featPerPlay = 16 + GameValues.AGENT_LIST.length;
-        int batchSize = 56;
-        int seed = 1;
-        double learningRate = 0.0014; // 0.0014
-        int numInputs = 10 * featPerPlay;
-        int numOutputs = 2;
-        int numHidden = 11; // 10
-        int numEpochs = 380; // 100
-        double threshold = 0.50;
 
         File trainingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTrain.csv");
         DataSetIterator trainingIterator = new MatchWinPredIterator(trainingData, batchSize, featPerPlay, false);
@@ -63,7 +65,7 @@ public class MatchWinPred {
         DataSet testData = testIterator.next();
         testData.shuffle(seed);
 
-        // SplitTestAndTrain testAndTrain = trainData.splitTestAndTrain(0.78); // 0.78
+        // SplitTestAndTrain testAndTrain = trainData.splitTestAndTrain(0.95); // 0.78
         // trainData = testAndTrain.getTrain();
         // DataSet testData = testAndTrain.getTest();
 
@@ -78,8 +80,8 @@ public class MatchWinPred {
             .layer(new DenseLayer.Builder().nIn(numInputs).nOut(numHidden)
                 .activation(Activation.RELU)
                 .build())
-            // .layer(new DenseLayer.Builder().nIn(numHidden).nOut(numHidden) // 6 hidden
-            //     .build())
+            .layer(new DenseLayer.Builder().nIn(numHidden).nOut(numHidden)
+                .build())
             .layer(new OutputLayer.Builder(LossFunctions.LossFunction.XENT) // XENT or MSE?
                 .activation(Activation.SIGMOID)
                 .nIn(numHidden).nOut(numOutputs)
@@ -210,5 +212,64 @@ public class MatchWinPred {
             model.save(location);
         }
         // UIServer.stopInstance();
+
+        // buildAndTrain(80, 1);
+    }
+
+    private static void buildAndTrain(int num, int step) throws IOException {
+        File trainingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTrain.csv");
+        DataSetIterator trainingIterator = new MatchWinPredIterator(trainingData, batchSize, featPerPlay, false);
+        DataSet trainData = trainingIterator.next();
+        trainData.shuffle(seed);
+
+        File testingData = new File(System.getProperty("user.dir") + "/src/main/java/com/teriyake/vai/data/MatchWinPredTest.csv");
+        DataSetIterator testIterator = new MatchWinPredIterator(testingData, batchSize, featPerPlay, false);
+        DataSet testData = testIterator.next();
+        testData.shuffle(seed);
+
+        double[] allAccur = new double[num];
+        for(int i = 1; i < num + 1; i += step) {
+            MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+                .seed(seed)
+                .activation(Activation.RELU) // SOFTMAX/SIGMOID, lower epochs for softmax?
+                .weightInit(WeightInit.XAVIER)
+                .updater(new Adam(learningRate)) // Adam, adagrad
+                .l2(0.0013)
+                .list()
+                .layer(new DenseLayer.Builder().nIn(numInputs).nOut(numHidden)
+                    .activation(Activation.RELU)
+                    .build())
+                .layer(new DenseLayer.Builder().nIn(numHidden).nOut(numHidden)
+                    .build())
+                .layer(new OutputLayer.Builder(LossFunctions.LossFunction.XENT) // XENT or MSE?
+                    .activation(Activation.SIGMOID)
+                    .nIn(numHidden).nOut(numOutputs)
+                    .build())
+                .build();
+            
+            MultiLayerNetwork model = new MultiLayerNetwork(conf);
+            // model = MultiLayerNetwork.load(new File(System.getProperty("user.home") + "/OneDrive/Documents/Vai/models/MatchWinPred/MatchWinPred.zip"), false);
+            model.init();
+
+            double highestAccur = 0;
+            for(int j = 0; j < numEpochs; j++) {
+                model.fit(trainData);
+                Evaluation testEval = new Evaluation(threshold);
+                testEval.eval(testData.getLabels(), model.output(testData.getFeatures()));
+                if(testEval.accuracy() > highestAccur)
+                    highestAccur = testEval.accuracy();
+            }
+            allAccur[i - 1] = highestAccur;
+    
+            Evaluation eval = new Evaluation(threshold);
+            INDArray output = model.output(testData.getFeatures());
+            eval.eval(testData.getLabels(), output);
+            log.info(eval.stats());
+            System.out.println("HIGHEST ACCURACY: " + highestAccur + " NUM: " + i);
+            // System.out.println("Row 0 = Def Win\nRow 1 = Att Win");
+        }
+        for(int i = 0; i < allAccur.length; i++) {
+            System.out.println(i + ": " + allAccur[i]);
+        }
     }
 }

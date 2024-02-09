@@ -21,14 +21,14 @@ import com.teriyake.vai.VaiUtil;
 import com.teriyake.vai.data.GameValues;
 
 public class MatchDataToCSV {
-    final static String CSV = "MatchWinPredTrain.csv";
-    final static boolean BALANCE = true;
+    final static String CSV = "MatchWinPredTest.csv";
+    final static boolean BALANCE = false;
     final static String MATCH_TYPE = "competitive";
     final static int NUM_FEATURES = 16 + GameValues.AGENT_LIST.length;
     // number max inclusive
-    final static int MAX_NUM_IN = 10; // 10 to include all players
+    final static int MAX_NUM_IN = 6; // 10 to include all players
     // number min inclusive
-    final static int MIN_NUM_IN = 7;
+    final static int MIN_NUM_IN = 2;
     // 10 max, 7 min train balance
     // 6 max, 2 min test
     // 5 max, 1 min other
