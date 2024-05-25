@@ -19,7 +19,7 @@ public class Collector {
         System.out.println("Loading...");
         Retriever retriever = new Retriever();
         // File file = CollectorInit.initFile(input);
-        String path = System.getProperty("user.home") + "/OneDrive/Documents/";
+        String path = System.getProperty("user.home") + "/OneDrive/Data/";
         // File list = new File(path, "Vai/");
         File file = new File(path);
 
